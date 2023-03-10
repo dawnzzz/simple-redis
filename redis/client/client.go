@@ -37,6 +37,8 @@ type Client struct {
 
 	status  int32 // 服务器状态（创建/运行/关闭）
 	working *sync.WaitGroup
+
+	keepalive time.Duration // 服务器存活检查时间
 }
 
 type request struct {
@@ -53,7 +55,7 @@ const (
 	maxWait  = 3 * time.Second
 )
 
-func MakeClient(addr string) (*Client, error) {
+func MakeClient(addr string, keepalive int) (*Client, error) {
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
 		return nil, err
@@ -65,10 +67,12 @@ func MakeClient(addr string) (*Client, error) {
 		waitingReqs: make(chan *request, chanSize),
 		addr:        addr,
 		working:     &sync.WaitGroup{},
+
+		keepalive: time.Second * time.Duration(keepalive),
 	}, nil
 }
 
-func MakeCmdLineClient(addr string) (*Client, error) {
+func MakeCmdLineClient(addr string, keepalive int) (*Client, error) {
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
 		return nil, err
@@ -82,15 +86,21 @@ func MakeCmdLineClient(addr string) (*Client, error) {
 		working:     &sync.WaitGroup{},
 
 		isCmdLine: true,
+		keepalive: time.Second * time.Duration(keepalive),
 	}, nil
 }
 
 // Start starts asynchronous goroutines
 func (client *Client) Start() {
-	client.ticker = time.NewTicker(10 * time.Second)
 	go client.handleWrite()
 	go client.handleRead()
-	go client.heartbeat()
+
+	if client.keepalive > 0 {
+		// 开启心跳
+		client.ticker = time.NewTicker(time.Second * client.keepalive / 2) // 每 keepalive/2 秒发送一次心跳
+		go client.heartbeat()
+	}
+
 	atomic.StoreInt32(&client.status, running)
 }
 
@@ -145,7 +155,9 @@ func (client *Client) StartCmdLine() {
 // Close stops asynchronous goroutines and close connection
 func (client *Client) Close() {
 	atomic.StoreInt32(&client.status, closed)
-	client.ticker.Stop()
+	if client.keepalive > 0 {
+		client.ticker.Stop()
+	}
 	// stop new request
 	close(client.pendingReqs)
 

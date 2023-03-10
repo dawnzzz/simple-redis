@@ -13,6 +13,7 @@ type ServerProperties struct {
 	Port      int    `mapstructure:"port"`      // 监听端口
 	Password  string `mapstructure:"password"`  // 密码
 	Databases int    `mapstructure:"databases"` // 数据库数量
+	Keepalive int    `mapstructure:"keepalive"` // 存活检查, 0为不开启检查
 
 	/* AOF持久化配置 */
 	AppendOnly               bool   `mapstructure:"append_only"`                 // 是否开启 AOF 持久化
@@ -37,6 +38,7 @@ func init() {
 		Port:      6179,
 		Password:  "",
 		Databases: 16,
+		Keepalive: 0,
 
 		AppendOnly:               true,
 		AofFilename:              "dump.aof",

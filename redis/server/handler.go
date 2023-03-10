@@ -19,7 +19,6 @@ import (
 
 var (
 	unknownErrReplyBytes = []byte("-ERR unknown\r\n")
-	maxHeartbeatInterval = time.Second * 60
 )
 
 type Handler struct {
@@ -45,7 +44,10 @@ func MakeHandler() *Handler {
 		db:          db,
 		closingChan: make(chan struct{}, 1),
 	}
-	go h.checkActiveHeartbeat() // 开启心跳检查
+
+	if config.Properties.Keepalive > 0 {
+		go h.checkActiveHeartbeat(config.Properties.Keepalive) // 开启心跳检查
+	}
 
 	return h
 }
@@ -122,13 +124,14 @@ func (h *Handler) Close() error {
 	return nil
 }
 
-func (h *Handler) checkActiveHeartbeat() {
-	ticker := time.NewTicker(time.Second * 5) // 每五秒钟检查一次客户端的心跳
+func (h *Handler) checkActiveHeartbeat(keepalive int) {
+	ticker := time.NewTicker(time.Second * time.Duration(keepalive/2)) // 每keepalive/2秒钟检查一次客户端的心跳
 	for {
 		select {
 		case <-ticker.C:
 			h.activeConn.Range(func(key, value any) bool {
-				if time.Now().After(value.(time.Time).Add(maxHeartbeatInterval)) {
+				if time.Now().After(value.(time.Time).Add(time.Second * time.Duration(keepalive))) {
+					//  keepalive 秒内没有收到消息，关闭连接
 					// 心跳超时，关闭连接
 					h.closeClient(key.(*connection.Connection))
 				}

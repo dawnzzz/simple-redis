@@ -8,17 +8,19 @@ import (
 )
 
 var (
-	host string
-	port int
+	host      string
+	port      int
+	keepalive int
 )
 
 func main() {
 	flag.StringVar(&host, "h", "localhost", "the host of dawndis server")
-	flag.IntVar(&port, "p", 6180, "the port of dawndis server")
+	flag.IntVar(&port, "p", 6179, "the port of dawndis server")
+	flag.IntVar(&keepalive, "k", 0, "the interval of server check client alive")
 
 	addr := fmt.Sprintf("%v:%v", host, port)
 
-	c, err := client.MakeCmdLineClient(addr)
+	c, err := client.MakeCmdLineClient(addr, keepalive)
 	if err != nil {
 		logrus.Fatal("make client err, ", err)
 	}

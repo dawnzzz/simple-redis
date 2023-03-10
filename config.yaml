@@ -3,6 +3,7 @@ bind: 0.0.0.0
 port: 6179
 password: 123456
 databases: 16   # 数据库数量，至少为16
+keepalive: 60   # 多少秒进行一次心跳检测，0为不检查
 
 ###### AOF 持久化配置 #####
 append_only: true

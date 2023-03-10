@@ -20,7 +20,7 @@ func newGetter(addr string) *getter {
 }
 
 func (g *getter) RemoteExec(dbIndex int, args [][]byte) redis.Reply {
-	c, err := client.MakeClient(g.addr) // 与远程节点建立连接
+	c, err := client.MakeClient(g.addr, config.Properties.Keepalive) // 与远程节点建立连接
 	if err != nil {
 		return reply.MakeErrReply("ERR remote node " + g.addr + " is not online")
 	}
