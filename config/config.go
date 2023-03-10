@@ -21,6 +21,10 @@ type ServerProperties struct {
 	AutoAofRewrite           bool   `mapstructure:"auto_aof_rewrite"`            // 是否开启 AOF 自动重写
 	AutoAofRewritePercentage int64  `mapstructure:"auto_aof_rewrite_percentage"` // 触发重写所需要的 aof 文件体积百分比，增量大于这个值时才进行重写
 	AutoAofRewriteMinSize    int64  `mapstructure:"auto_aov_rewrite_min_size"`   // 表示触发AOF重写的最小文件体积，单位mb
+
+	/* 集群配置 */
+	Self  string   `mapstructure:"self"`
+	Peers []string `mapstructure:"peers"`
 }
 
 var Properties *ServerProperties

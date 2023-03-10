@@ -1,6 +1,7 @@
 package server
 
 import (
+	"Dawndis/config"
 	database2 "Dawndis/database"
 	"Dawndis/interface/database"
 	"Dawndis/lib/sync/atomic"
@@ -31,7 +32,14 @@ type Handler struct {
 // MakeHandler creates a Handler instance
 func MakeHandler() *Handler {
 	var db database.DB
-	db = database2.NewStandaloneServer()
+	if config.Properties.Peers != nil && len(config.Properties.Peers) != 0 {
+		// 集群模式
+		db = database2.NewClusterServer(config.Properties.Peers)
+		logger.Infof("cluster mode, peer is %v", config.Properties.Peers)
+	} else {
+		// 单机模式
+		db = database2.NewStandaloneServer()
+	}
 
 	h := &Handler{
 		db:          db,

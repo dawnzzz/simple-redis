@@ -2,6 +2,7 @@ package database
 
 import (
 	"Dawndis/config"
+	"Dawndis/database/cluster"
 	_ "Dawndis/database/commands"
 	"Dawndis/database/engine"
 	"Dawndis/database/rdb/aof"
@@ -26,10 +27,113 @@ type Server struct {
 	rewriteWait  sync.WaitGroup
 	rewriting    atomic.Bool
 	closed       chan struct{}
+	cluster      *cluster.Cluster
 }
 
 // NewStandaloneServer creates a standalone redis server
 func NewStandaloneServer() *Server {
+	server := initServer()
+
+	return server
+}
+
+// NewClusterServer 创建一个集群服务器
+func NewClusterServer(peers []string) *Server {
+	server := initServer()
+
+	// 加入集群
+	cluster := cluster.NewCluster(config.Properties.Self)
+	cluster.AddPeers(peers...)
+	if cluster == nil {
+		logger.Fatalf("please set 'self'(self ip:port) in conf file")
+	}
+	server.cluster = cluster
+
+	return server
+}
+
+func (s *Server) Exec(client redis.Connection, cmdLine [][]byte) redis.Reply {
+	if s.cluster != nil {
+		return s.execCluster(client, cmdLine)
+	}
+
+	return s.execStandalone(client, cmdLine) // 单机模式
+}
+
+// 单机模式执行命令的方式
+func (s *Server) execStandalone(client redis.Connection, cmdLine [][]byte) redis.Reply {
+	cmdName := strings.ToLower(string(cmdLine[0]))
+
+	if (cmdName) == "ping" {
+		logger.Debugf("received heart beat from %v", client.Name())
+		return reply.MakePongStatusReply()
+	}
+
+	if _, ok := client.(*connection.FakeConn); !ok { // fakeConn不做校验
+		if cmdName == "auth" {
+			return Auth(client, cmdLine[1:])
+		}
+		if !isAuthenticated(client) {
+			return reply.MakeErrReply("NOAUTH Authentication required")
+		}
+	}
+	switch cmdName {
+	case "select":
+		return SelectDB(client, cmdLine[1:], len(s.dbSet))
+	case "bgrewriteaof":
+		return BGRewriteAof(s, cmdLine[1:])
+	case "rewriteaof":
+		return RewriteAof(s, cmdLine[1:])
+	}
+
+	// normal commands
+	dbIndex := client.GetDBIndex()
+	selectedDB, errReply := s.selectDB(dbIndex)
+	if errReply != nil {
+		return errReply
+	}
+	return selectedDB.Exec(client, cmdLine)
+}
+
+// 集群模式执行命令的方式
+func (s *Server) execCluster(client redis.Connection, cmdLine [][]byte) redis.Reply {
+	cmdName := strings.ToLower(string(cmdLine[0]))
+
+	if (cmdName) == "ping" {
+		logger.Debugf("received heart beat from %v", client.Name())
+		return reply.MakePongStatusReply()
+	}
+
+	if _, ok := client.(*connection.FakeConn); !ok { // fakeConn不做校验
+		if cmdName == "auth" {
+			return Auth(client, cmdLine[1:])
+		}
+		if !isAuthenticated(client) {
+			return reply.MakeErrReply("NOAUTH Authentication required")
+		}
+	}
+
+	switch cmdName {
+	case "select":
+		return SelectDB(client, cmdLine[1:], len(s.dbSet))
+	case "bgrewriteaof":
+		return BGRewriteAof(s, cmdLine[1:])
+	case "rewriteaof":
+		return RewriteAof(s, cmdLine[1:])
+	}
+
+	// normal commands
+	dbIndex := client.GetDBIndex()
+	localDB, errReply := s.selectDB(dbIndex)
+	if errReply != nil {
+		return errReply
+	}
+
+	return s.cluster.Exec(client, dbIndex, localDB, cmdLine)
+}
+
+// server 的通用初始化操作初始化
+func initServer() *Server {
 	// 初始化数据库
 	server := &Server{
 		closed: make(chan struct{}, 1),
@@ -79,40 +183,6 @@ func NewStandaloneServer() *Server {
 	return server
 }
 
-func (s *Server) Exec(client redis.Connection, cmdLine [][]byte) redis.Reply {
-	cmdName := strings.ToLower(string(cmdLine[0]))
-
-	if (cmdName) == "ping" {
-		logger.Debugf("received heart beat from %v", client.Name())
-		return reply.MakePongStatusReply()
-	}
-
-	if _, ok := client.(*connection.FakeConn); !ok { // fakeConn不做校验
-		if cmdName == "auth" {
-			return Auth(client, cmdLine[1:])
-		}
-		if !isAuthenticated(client) {
-			return reply.MakeErrReply("NOAUTH Authentication required")
-		}
-	}
-	switch cmdName {
-	case "select":
-		return SelectDB(client, cmdLine[1:], len(s.dbSet))
-	case "bgrewriteaof":
-		return BGRewriteAof(s, cmdLine[1:])
-	case "rewriteaof":
-		return RewriteAof(s, cmdLine[1:])
-	}
-
-	// normal commands
-	dbIndex := client.GetDBIndex()
-	selectedDB, errReply := s.selectDB(dbIndex)
-	if errReply != nil {
-		return errReply
-	}
-	return selectedDB.Exec(client, cmdLine)
-}
-
 func (s *Server) selectDB(dbIndex int) (*engine.DB, *reply.StandardErrReply) {
 	if dbIndex >= len(s.dbSet) || dbIndex < 0 {
 		return nil, reply.MakeErrReply("ERR DB index is out of range")
@@ -133,7 +203,9 @@ func (s *Server) AfterClientClose(c redis.Connection) {
 
 func (s *Server) Close() {
 	s.closed <- struct{}{}
-	s.AofPersister.Close() // 关闭aof持久化
+	if config.Properties.AppendOnly {
+		s.AofPersister.Close() // 关闭aof持久化
+	}
 }
 
 func (s *Server) GetDBSize(dbIndex int) (int, int) {

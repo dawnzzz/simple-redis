@@ -1,0 +1,19 @@
+###### 服务器配置 #####
+bind: 0.0.0.0
+port: 6180
+databases: 16   # 数据库数量，至少为16
+password: 123456
+
+###### AOF 持久化配置 #####
+append_only: false
+aof_filename: dump.aof
+aof_fsync: 0 # 0: always, 1: every sec, 2: no
+auto_aof_rewrite: true
+auto_aof_rewrite_percentage: 100  # 触发重写所需要的 aof 文件体积百分比，增量大于这个值时才进行重写
+auto_aov_rewrite_min_size: 64 # 表示触发AOF重写的最小文件体积，单位mb
+
+###### 集群配置 #####
+self: 127.0.0.1:6180
+peers:
+  - "127.0.0.1:6181"
+  - "127.0.0.1:6182"

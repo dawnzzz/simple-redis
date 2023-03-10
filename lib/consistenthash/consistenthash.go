@@ -52,9 +52,9 @@ func (m *Map) AddNodes(keys ...string) {
 }
 
 // PickNode 计算key对应的节点
-func (m *Map) PickNode(key string) string {
+func (m *Map) PickNode(key string) (string, bool) {
 	if m.IsEmpty() {
-		return ""
+		return "", false
 	}
 
 	// 计算key的节点
@@ -68,6 +68,7 @@ func (m *Map) PickNode(key string) string {
 	if index == len(m.keys) {
 		index = 0
 	}
+	node := m.keys[index]
 
-	return m.hashMap[index]
+	return m.hashMap[node], true
 }
