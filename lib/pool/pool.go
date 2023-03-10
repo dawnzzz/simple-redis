@@ -13,7 +13,6 @@ type (
 
 var (
 	ErrClosed    = errors.New("pool closed")
-	ErrCreate    = errors.New("create failed")
 	ErrMaxActive = errors.New("active connections reached max num")
 )
 
@@ -89,6 +88,7 @@ func (pool *Pool) getItem() (interface{}, error) {
 	if pool.activeConnNum >= pool.MaxActiveNum { // 超过了最大活跃连接数
 		return nil, ErrMaxActive
 	}
+	var err error
 	for i := 0; i < pool.MaxRetryNum; i++ { // 最多重试三次
 		item, err := pool.factory()
 		if err == nil {
@@ -96,10 +96,14 @@ func (pool *Pool) getItem() (interface{}, error) {
 		}
 	}
 
-	return nil, ErrCreate
+	return nil, err
 }
 
 func (pool *Pool) Put(x interface{}) {
+	if x == nil {
+		return
+	}
+
 	pool.mu.Lock()
 	defer pool.mu.Unlock()
 	if pool.closed {
