@@ -206,6 +206,10 @@ func (s *Server) Close() {
 	if config.Properties.AppendOnly {
 		s.AofPersister.Close() // 关闭aof持久化
 	}
+
+	if s.cluster != nil {
+		s.cluster.Close()
+	}
 }
 
 func (s *Server) GetDBSize(dbIndex int) (int, int) {

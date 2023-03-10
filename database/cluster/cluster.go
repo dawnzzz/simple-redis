@@ -41,6 +41,11 @@ func (cluster *Cluster) AddPeers(peers ...string) {
 }
 
 func (cluster *Cluster) Exec(client redis.Connection, dbIndex int, db *engine.DB, cmdLine [][]byte) redis.Reply {
+	if mustLocal(cmdLine) {
+		// 在本地执行
+		return db.Exec(client, cmdLine)
+	}
+
 	key := string(cmdLine[1])
 	peer, ok := cluster.peers.PickNode(key)
 	if !ok || peer == cluster.self {
@@ -50,4 +55,20 @@ func (cluster *Cluster) Exec(client redis.Connection, dbIndex int, db *engine.DB
 
 	// 远程执行
 	return cluster.getters[peer].RemoteExec(dbIndex, cmdLine)
+}
+
+func (cluster *Cluster) Close() {
+	for _, g := range cluster.getters {
+		g.Close()
+	}
+}
+
+// 判断这条命令是否一定在本地执行
+// TODO: 后面进行修改，这里只是进行简单的判断
+func mustLocal(cmdLine [][]byte) bool {
+	if len(cmdLine) <= 1 {
+		return true
+	}
+
+	return false
 }

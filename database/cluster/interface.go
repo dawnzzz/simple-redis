@@ -9,4 +9,5 @@ type PeerPicker interface {
 
 type PeerGetter interface {
 	RemoteExec(dbIndex int, args [][]byte) redis.Reply
+	Close()
 }

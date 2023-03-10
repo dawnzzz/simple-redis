@@ -169,6 +169,10 @@ func (client *Client) Close() {
 	close(client.waitingReqs)
 }
 
+func (client *Client) StatusClosed() bool {
+	return atomic.LoadInt32(&client.status) == closed
+}
+
 // Send sends a request to redis server
 func (client *Client) Send(args [][]byte) redis.Reply {
 	if atomic.LoadInt32(&client.status) != running {
