@@ -53,5 +53,5 @@ func (r *EmptyMultiBulkStringReply) ToBytes() []byte {
 }
 
 func (r *EmptyMultiBulkStringReply) DataString() string {
-	return ""
+	return "(empty list or set)"
 }
