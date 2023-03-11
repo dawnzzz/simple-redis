@@ -84,6 +84,12 @@ func (s *Server) execStandalone(client redis.Connection, cmdLine [][]byte) redis
 		return BGRewriteAof(s, cmdLine[1:])
 	case "rewriteaof":
 		return RewriteAof(s, cmdLine[1:])
+	case "multi":
+		return StartMulti(client, cmdLine[1:])
+	case "exec":
+		return ExecMultiStandalone(s, client, cmdLine[1:])
+	case "discard":
+		return ExecDiscard(client, cmdLine[1:])
 	}
 
 	// normal commands

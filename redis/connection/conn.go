@@ -1,12 +1,15 @@
 package connection
 
 import (
+	"Dawndis/interface/redis"
 	"Dawndis/lib/sync/wait"
 	"Dawndis/logger"
 	"net"
 	"sync"
 	"time"
 )
+
+type CmdLine [][]byte
 
 // Connection represents a connection with a client
 type Connection struct {
@@ -23,6 +26,10 @@ type Connection struct {
 
 	// selected db
 	selectedDB int
+
+	isMulti        bool          // 表明是否在 multi 开启事务中
+	queue          [][][]byte    // 事务中排队的命令
+	syntaxErrQueue []redis.Reply // 事务中的语法错误
 }
 
 var connPool = sync.Pool{

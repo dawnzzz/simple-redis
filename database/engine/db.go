@@ -59,19 +59,41 @@ func (db *DB) Flush() {
 
 // Exec executes command within one database
 func (db *DB) Exec(c redis.Connection, cmdLine [][]byte) redis.Reply {
+	if c.GetMultiStatus() { // 如果客户端已经进入了multi
+		// 检查是否有语法错误
+		if errReply := db.CheckSyntaxErr(cmdLine); errReply != nil {
+			c.EnqueueSyntaxErrQueue(errReply) // 语法有错误
+			return errReply
+		}
+		// 获取命令，检查是否支持multi
+		if errReply := db.CheckSupportMulti(cmdLine); errReply != nil {
+			c.EnqueueSyntaxErrQueue(errReply) // 语法有错误
+			return errReply
+		}
+
+		// 语法没有错误，则进入队列等待执行
+		c.EnqueueCmdLine(cmdLine)
+
+		return reply.MakeStatusReply("QUEUED")
+	}
+
+	// 正常执行的命令
 	return db.execNormalCommand(cmdLine)
 }
 
+// ExecMulti multi命令执行阶段
+func (db *DB) ExecMulti(c redis.Connection) redis.Reply {
+	return db.execMultiCommand(c.GetEnqueuedCmdLine())
+}
+
 func (db *DB) execNormalCommand(cmdLine [][]byte) redis.Reply {
+	if errReply := db.CheckSyntaxErr(cmdLine); errReply != nil {
+		// 检查是否有语法错误
+		return errReply
+	}
 	cmdName := strings.ToLower(string(cmdLine[0]))
 	// 获取命令
-	cmd, ok := cmdTable[cmdName]
-	if !ok {
-		return reply.MakeErrReply("ERR unknown command '" + cmdName + "'")
-	}
-	if !validateArity(cmd.arity, cmdLine) {
-		return reply.MakeArgNumErrReply(cmdName)
-	}
+	cmd, _ := cmdTable[cmdName]
 
 	// 执行前的加锁
 	prepare := cmd.prepare
@@ -91,6 +113,56 @@ func (db *DB) execNormalCommand(cmdLine [][]byte) redis.Reply {
 		}
 	}
 	return r
+}
+
+func (db *DB) execMultiCommand(cmdLines [][][]byte) redis.Reply {
+	// 此时不需要检查是否有语法错误，因为在排队过程中已经检查过了
+
+	// // 获取所有需要加锁的key
+	writeKeys := make([]string, len(cmdLines))
+	readKeys := make([]string, len(cmdLines))
+	for _, cmdLine := range cmdLines {
+		cmdName := strings.ToLower(string(cmdLine[0]))
+		// 获取命令
+		cmd, _ := cmdTable[cmdName]
+
+		// 获取需要加锁的key
+		prepare := cmd.prepare
+		write, read := prepare(cmdLine[1:])
+		writeKeys = append(writeKeys, write...)
+		readKeys = append(readKeys, read...)
+	}
+
+	// 执行前的加锁
+	db.RWLocks(writeKeys, readKeys)
+	defer db.RWUnLocks(writeKeys, readKeys)
+
+	// 执行
+	var results [][]byte // 存储命令执行的结果
+	for _, cmdLine := range cmdLines {
+		cmdName := strings.ToLower(string(cmdLine[0]))
+		// 获取命令
+		cmd, _ := cmdTable[cmdName]
+
+		fun := cmd.executor
+		r, aofExpireCtx := fun(db, cmdLine[1:])
+		results = append(results, []byte(r.DataString()))
+		if aofExpireCtx != nil && aofExpireCtx.NeedAof {
+			// 需要进行AOF持久化
+			db.addAof(cmdLine)
+			if aofExpireCtx.ExpireAt != nil {
+				// 有过期时间
+				key := string(cmdLine[0])
+				db.addAof(utils.ExpireToCmdLine(key, *aofExpireCtx.ExpireAt))
+			}
+		}
+	}
+
+	if len(results) == 0 {
+		return reply.MakeEmptyMultiBulkStringReply()
+	}
+
+	return reply.MakeMultiBulkStringReply(results)
 }
 
 // 验证参数数量是否正确
@@ -138,4 +210,28 @@ func (db *DB) ForEach(cb func(key string, data *database.DataEntity, expiration 
 		}
 		return cb(key, entity, expiration)
 	})
+}
+
+func (db *DB) CheckSyntaxErr(cmdLine [][]byte) redis.Reply {
+	cmdName := strings.ToLower(string(cmdLine[0]))
+	// 获取命令
+	cmd, ok := cmdTable[cmdName]
+	if !ok {
+		return reply.MakeErrReply("ERR unknown command '" + cmdName + "'")
+	}
+	if !validateArity(cmd.arity, cmdLine) {
+		return reply.MakeArgNumErrReply(cmdName)
+	}
+
+	return nil
+}
+
+func (db *DB) CheckSupportMulti(cmdLine [][]byte) redis.Reply {
+	cmdName := strings.ToLower(string(cmdLine[0]))
+	cmd, _ := cmdTable[cmdName]
+	if cmd.prepare == nil {
+		return reply.MakeErrReply("ERR command '" + cmdName + "' cannot be used in MULTI")
+	}
+
+	return nil
 }

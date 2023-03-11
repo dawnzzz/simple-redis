@@ -31,6 +31,13 @@ func isAuthenticated(c redis.Connection) bool {
 }
 
 func SelectDB(c redis.Connection, args [][]byte, dbNum int) redis.Reply {
+	if c.GetMultiStatus() {
+		// 无法在multi中使用select
+		errReply := reply.MakeErrReply("cannot select database within multi")
+		c.EnqueueSyntaxErrQueue(errReply)
+		return errReply
+	}
+
 	if len(args) != 1 {
 		return reply.MakeErrReply("ERR wrong number of arguments for 'select' command")
 	}

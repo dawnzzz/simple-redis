@@ -13,4 +13,12 @@ type Connection interface {
 	SelectDB(int)
 
 	Name() string
+
+	GetMultiStatus() bool
+	SetMultiStatus(bool)
+	GetEnqueuedCmdLine() [][][]byte
+	EnqueueCmdLine([][]byte)
+	ClearCmdLines()
+	GetSyntaxErrQueue() []Reply
+	EnqueueSyntaxErrQueue(Reply)
 }
