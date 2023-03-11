@@ -3,6 +3,7 @@ package reply
 import (
 	"bytes"
 	"strconv"
+	"strings"
 )
 
 type MultiBulkStringReply struct {
@@ -28,15 +29,16 @@ func (r *MultiBulkStringReply) ToBytes() []byte {
 }
 
 func (r *MultiBulkStringReply) DataString() string {
-	args := make([]byte, 0, 10)
+	var builder strings.Builder
 	for i, arg := range r.Args {
-		args = append(args, arg...)
+		builder.Write(arg)
+		builder.WriteString(strconv.Itoa(i) + ") ")
 		if i != len(r.Args)-1 {
-			args = append(args, '\n')
+			builder.WriteByte('\n')
 		}
 	}
 
-	return string(args)
+	return builder.String()
 }
 
 type EmptyMultiBulkStringReply struct {
