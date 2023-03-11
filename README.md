@@ -1,5 +1,7 @@
 # Simple-Redis
 
+本项目启发于 [Godis](https://github.com/HDT3213/godis)
+
 Simple-Redis 是一个 golang 编写的实现了 RESP（REdis Serialization Protocol）协议的简易 Redis，旨在通过自己的方式实现 Redis 缓存数据库的功能。
 
 项目文件目录安排如下：
