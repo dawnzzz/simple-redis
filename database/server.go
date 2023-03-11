@@ -90,6 +90,10 @@ func (s *Server) execStandalone(client redis.Connection, cmdLine [][]byte) redis
 		return ExecMultiStandalone(s, client, cmdLine[1:])
 	case "discard":
 		return ExecDiscard(client, cmdLine[1:])
+	case "watch":
+		return ExecWatch(s, client, cmdLine[1:])
+	case "unwatch":
+		return ExecUnWatch(client, cmdLine[1:])
 	}
 
 	// normal commands

@@ -21,4 +21,6 @@ type Connection interface {
 	ClearCmdLines()
 	GetSyntaxErrQueue() []Reply
 	EnqueueSyntaxErrQueue(Reply)
+	GetWatching() map[string]uint32
+	CancelWatching()
 }

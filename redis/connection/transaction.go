@@ -38,3 +38,14 @@ func (c *Connection) GetSyntaxErrQueue() []redis.Reply {
 func (c *Connection) EnqueueSyntaxErrQueue(r redis.Reply) {
 	c.syntaxErrQueue = append(c.syntaxErrQueue, r)
 }
+
+func (c *Connection) GetWatching() map[string]uint32 {
+	if c.watching == nil {
+		c.watching = make(map[string]uint32)
+	}
+	return c.watching
+}
+
+func (c *Connection) CancelWatching() {
+	c.watching = nil
+}

@@ -60,3 +60,39 @@ func ExecDiscard(client redis.Connection, args [][]byte) redis.Reply {
 
 	return reply.MakeOkReply()
 }
+
+// ExecWatch 执行WATCH命令
+func ExecWatch(s *Server, client redis.Connection, args [][]byte) redis.Reply {
+
+	if len(args) <= 0 { // 参数数量不正确
+		return reply.MakeArgNumErrReply("multi")
+	}
+
+	// 选择数据库
+	dbIndex := client.GetDBIndex()
+	localDB, errReply := s.selectDB(dbIndex)
+	if errReply != nil {
+		return errReply
+	}
+
+	// 记录当前version
+	watching := client.GetWatching()
+	for _, rawKey := range args {
+		key := string(rawKey)
+		watching[key] = localDB.GetVersion(key)
+	}
+
+	return reply.MakeOkReply()
+}
+
+// ExecUnWatch 取消对所有key的watch
+func ExecUnWatch(client redis.Connection, args [][]byte) redis.Reply {
+	if len(args) != 0 { // 参数数量不正确
+		return reply.MakeArgNumErrReply("multi")
+	}
+
+	// 取消watch
+	client.CancelWatching()
+
+	return reply.MakeOkReply()
+}

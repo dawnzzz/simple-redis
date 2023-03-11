@@ -27,9 +27,10 @@ type Connection struct {
 	// selected db
 	selectedDB int
 
-	isMulti        bool          // 表明是否在 multi 开启事务中
-	queue          [][][]byte    // 事务中排队的命令
-	syntaxErrQueue []redis.Reply // 事务中的语法错误
+	isMulti        bool              // 表明是否在 multi 开启事务中
+	queue          [][][]byte        // 事务中排队的命令
+	syntaxErrQueue []redis.Reply     // 事务中的语法错误
+	watching       map[string]uint32 // 正在WATCH的key值
 }
 
 var connPool = sync.Pool{
