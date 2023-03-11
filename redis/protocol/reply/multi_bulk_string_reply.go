@@ -31,8 +31,8 @@ func (r *MultiBulkStringReply) ToBytes() []byte {
 func (r *MultiBulkStringReply) DataString() string {
 	var builder strings.Builder
 	for i, arg := range r.Args {
+		builder.WriteString(strconv.Itoa(i+1) + ") ")
 		builder.Write(arg)
-		builder.WriteString(strconv.Itoa(i) + ") ")
 		if i != len(r.Args)-1 {
 			builder.WriteByte('\n')
 		}
