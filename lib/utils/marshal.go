@@ -17,6 +17,23 @@ func EntityToBytes(key string, entity *database.DataEntity) []byte {
 	if entity == nil {
 		return nil
 	}
+
+	return EntityToReply(key, entity).ToBytes()
+}
+
+func EntityToCmdLine(key string, entity *database.DataEntity) [][]byte {
+	if entity == nil {
+		return nil
+	}
+
+	return EntityToReply(key, entity).Args
+}
+
+func EntityToReply(key string, entity *database.DataEntity) *reply.MultiBulkStringReply {
+	if entity == nil {
+		return nil
+	}
+
 	var cmd *reply.MultiBulkStringReply
 	switch val := entity.Data.(type) {
 	case []byte:
@@ -35,7 +52,7 @@ func EntityToBytes(key string, entity *database.DataEntity) []byte {
 		return nil
 	}
 
-	return cmd.ToBytes()
+	return cmd
 }
 
 // ExpireToBytes 将expireAt命令转为[]byte(*reply.MultiBulkStringReply.ToBytes())
