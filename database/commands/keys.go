@@ -8,6 +8,29 @@ import (
 	"time"
 )
 
+func delExec(db *engine.DB, args [][]byte) (redis.Reply, *engine.AofExpireCtx) {
+	key := string(args[0])
+
+	// 首先查询是否存在
+	_, exist := db.GetEntity(key)
+
+	if !exist {
+		// 不存在，直接返回
+		return reply.MakeIntReply(0), &engine.AofExpireCtx{
+			NeedAof:  false,
+			ExpireAt: nil,
+		}
+	}
+
+	// key存在，删除
+	db.Remove(key)
+
+	return reply.MakeIntReply(1), &engine.AofExpireCtx{
+		NeedAof:  true,
+		ExpireAt: nil,
+	}
+}
+
 func execExpireAt(db *engine.DB, args [][]byte) (redis.Reply, *engine.AofExpireCtx) {
 	key := string(args[0])
 
@@ -51,6 +74,7 @@ func execExpire(db *engine.DB, args [][]byte) (redis.Reply, *engine.AofExpireCtx
 }
 
 func init() {
+	engine.RegisterCommand("del", delExec, writeFirstKey, 2, engine.FlagWrite)
 	engine.RegisterCommand("ExpireAt", execExpireAt, writeFirstKey, 3, engine.FlagWrite)
 	engine.RegisterCommand("Expire", execExpire, writeFirstKey, 3, engine.FlagWrite)
 }

@@ -15,6 +15,8 @@ type ServerProperties struct {
 	Databases int    `mapstructure:"databases"` // 数据库数量
 	Keepalive int    `mapstructure:"keepalive"` // 存活检查, 0为不开启检查
 
+	OpenAtomicTx bool `mapstructure:"open_atomic_tx"` // 是否开启原子性事务
+
 	/* AOF持久化配置 */
 	AppendOnly               bool   `mapstructure:"append_only"`                 // 是否开启 AOF 持久化
 	AofFilename              string `mapstructure:"aof_filename"`                // AOF 持久化文件名
@@ -39,6 +41,8 @@ func init() {
 		Password:  "",
 		Databases: 16,
 		Keepalive: 0,
+
+		OpenAtomicTx: false,
 
 		AppendOnly:               true,
 		AofFilename:              "dump.aof",

@@ -48,10 +48,6 @@ func MakeBasicDB() *DB {
 	}
 }
 
-//func (db *DB) Exec(cmdLine [][]byte) redis.Reply {
-//	cmdName := strings.ToLower(string(cmdLine[0]))
-//}
-
 // Flush Warning! clean all db data
 func (db *DB) Flush() {
 	db.data.Clear()
@@ -83,11 +79,6 @@ func (db *DB) Exec(c redis.Connection, cmdLine [][]byte) redis.Reply {
 	return db.execNormalCommand(cmdLine)
 }
 
-// ExecMulti multi命令执行阶段
-func (db *DB) ExecMulti(c redis.Connection) redis.Reply {
-	return db.execMultiCommand(c.GetEnqueuedCmdLine(), c.GetWatching())
-}
-
 func (db *DB) execNormalCommand(cmdLine [][]byte) redis.Reply {
 	if errReply := db.CheckSyntaxErr(cmdLine); errReply != nil {
 		// 检查是否有语法错误
@@ -106,74 +97,31 @@ func (db *DB) execNormalCommand(cmdLine [][]byte) redis.Reply {
 	fun := cmd.executor
 	r, aofExpireCtx := fun(db, cmdLine[1:])
 	db.afterExec(r, aofExpireCtx, cmdLine)
+	// 非读命令执行增加版本
+	db.addVersion(write...)
+
 	return r
 }
 
-func (db *DB) execMultiCommand(cmdLines [][][]byte, watching map[string]uint32) redis.Reply {
-	// 此时不需要检查是否有语法错误，因为在排队过程中已经检查过了
-
-	// // 获取所有需要加锁的key
-	writeKeys := make([]string, len(cmdLines))
-	readKeys := make([]string, len(cmdLines)+len(watching))
-	for _, cmdLine := range cmdLines {
-		cmdName := strings.ToLower(string(cmdLine[0]))
-		// 获取命令
-		cmd, _ := cmdTable[cmdName]
-
-		// 获取需要加锁的key
-		prepare := cmd.prepare
-		write, read := prepare(cmdLine[1:])
-		writeKeys = append(writeKeys, write...)
-		readKeys = append(readKeys, read...)
-	}
-
-	// 获取需要watch的key
-	watchingKeys := make([]string, 0, len(watching))
-	for key := range watching {
-		watchingKeys = append(watchingKeys, key)
-	}
-	readKeys = append(readKeys, watchingKeys...)
-
-	// 执行前的加锁
-	db.RWLocks(writeKeys, readKeys)
-	defer db.RWUnLocks(writeKeys, readKeys)
-
-	// 执行前检查version是否变化
-	versionChanged := db.checkVersionChanged(watching)
-	if versionChanged {
-		// version变化了，什么都不执行
-		return reply.MakeNullBulkStringReply()
+func (db *DB) execWithLock(cmdLine CmdLine) redis.Reply {
+	if errReply := db.CheckSyntaxErr(cmdLine); errReply != nil {
+		// 检查是否有语法错误
+		return errReply
 	}
 
 	// 执行
-	var results [][]byte // 存储命令执行的结果
-	for _, cmdLine := range cmdLines {
-		cmdName := strings.ToLower(string(cmdLine[0]))
-		// 获取命令
-		cmd, _ := cmdTable[cmdName]
+	cmdName := strings.ToLower(string(cmdLine[0]))
+	cmd, _ := cmdTable[cmdName]
+	fun := cmd.executor
+	r, aofExpireCtx := fun(db, cmdLine[1:])
+	db.afterExec(r, aofExpireCtx, cmdLine)
 
-		fun := cmd.executor
-		r, aofExpireCtx := fun(db, cmdLine[1:])
-		results = append(results, []byte(r.DataString()))
-		db.afterExec(r, aofExpireCtx, cmdLine)
-	}
-
-	if len(results) == 0 {
-		return reply.MakeEmptyMultiBulkStringReply()
-	}
-
-	return reply.MakeMultiBulkStringReply(results)
+	return r
 }
 
-// afterExec 命令执行之后的相关处理，如增加版本、持久化相关等
+// afterExec 命令执行之后的相关处理，如持久化相关等
 func (db *DB) afterExec(r redis.Reply, aofExpireCtx *AofExpireCtx, cmdLine [][]byte) {
-	// 非读命令执行成功，增加版本
 	key := string(cmdLine[1])
-	cmdName := strings.ToLower(string(cmdLine[0]))
-	if _, isErr := r.(*reply.StandardErrReply); !isReadOnlyCommand(cmdName) && !isErr {
-		db.addVersion(key)
-	}
-
 	// 持久化相关
 	if aofExpireCtx != nil && aofExpireCtx.NeedAof {
 		// 需要进行AOF持久化
@@ -241,16 +189,6 @@ func (db *DB) CheckSyntaxErr(cmdLine [][]byte) redis.Reply {
 	}
 	if !validateArity(cmd.arity, cmdLine) {
 		return reply.MakeArgNumErrReply(cmdName)
-	}
-
-	return nil
-}
-
-func (db *DB) CheckSupportMulti(cmdLine [][]byte) redis.Reply {
-	cmdName := strings.ToLower(string(cmdLine[0]))
-	cmd, _ := cmdTable[cmdName]
-	if cmd.prepare == nil {
-		return reply.MakeErrReply("ERR command '" + cmdName + "' cannot be used in MULTI")
 	}
 
 	return nil
