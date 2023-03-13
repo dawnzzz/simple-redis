@@ -17,7 +17,7 @@ var (
 )
 
 func TestDB(t *testing.T) {
-	db := makeDB()
+	db := MakeDB()
 
 	/* Test Put And Get */
 	t.Log("Test Put And Get")
