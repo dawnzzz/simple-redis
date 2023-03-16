@@ -70,6 +70,9 @@ func DiscardMultiStandalone(client redis.Connection, args [][]byte) redis.Reply 
 
 // ExecWatchStandalone 执行WATCH命令
 func ExecWatchStandalone(s *Server, client redis.Connection, args [][]byte) redis.Reply {
+	if client.GetMultiStatus() {
+		return reply.MakeErrReply("ERR WATCH inside MULTI is not allowed")
+	}
 
 	if len(args) <= 0 { // 参数数量不正确
 		return reply.MakeArgNumErrReply("watch")
@@ -94,6 +97,10 @@ func ExecWatchStandalone(s *Server, client redis.Connection, args [][]byte) redi
 
 // ExecUnWatchStandalone 取消对所有key的watch
 func ExecUnWatchStandalone(client redis.Connection, args [][]byte) redis.Reply {
+	if client.GetMultiStatus() {
+		return reply.MakeErrReply("ERR UNWATCH inside MULTI is not allowed")
+	}
+
 	if len(args) != 0 { // 参数数量不正确
 		return reply.MakeArgNumErrReply("unwatch")
 	}
