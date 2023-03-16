@@ -62,7 +62,7 @@ func (db *DB) execMultiCommand(cmdLines [][][]byte, watching map[string]uint32) 
 		if config.Properties.OpenAtomicTx {
 			// 开启原子性事务，记录undo日志
 			key := string(cmdLine[1])
-			undoLogs = append(undoLogs, db.getUndoLog(key))
+			undoLogs = append(undoLogs, db.GetUndoLog(key))
 		}
 
 		// 执行命令
@@ -92,7 +92,7 @@ func (db *DB) execMultiCommand(cmdLines [][][]byte, watching map[string]uint32) 
 				continue
 			}
 			for _, cmdLine := range undoLog {
-				db.execWithLock(cmdLine)
+				db.ExecWithLock(cmdLine)
 			}
 		}
 		return reply.MakeErrReply("EXECABORT Transaction rollback because of errors during executing. (atomic tx is open)")
@@ -115,7 +115,7 @@ func (db *DB) CheckSupportMulti(cmdLine [][]byte) redis.Reply {
 	return nil
 }
 
-func (db *DB) getUndoLog(key string) []CmdLine {
+func (db *DB) GetUndoLog(key string) []CmdLine {
 	undoLog := make([]CmdLine, 0, 3)
 	entity, exist := db.GetEntity(key)
 	if !exist {

@@ -31,6 +31,7 @@ type Connection struct {
 	queue          [][][]byte        // 事务中排队的命令
 	syntaxErrQueue []redis.Reply     // 事务中的语法错误
 	watching       map[string]uint32 // 正在WATCH的key值
+	TxID           string            // 事务ID，在分布式事务中用到
 }
 
 var connPool = sync.Pool{

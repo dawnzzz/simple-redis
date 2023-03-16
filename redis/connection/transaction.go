@@ -49,3 +49,11 @@ func (c *Connection) GetWatching() map[string]uint32 {
 func (c *Connection) CancelWatching() {
 	c.watching = nil
 }
+
+func (c *Connection) SetTxID(id string) {
+	c.TxID = id
+}
+
+func (c *Connection) GetTxID() string {
+	return c.TxID
+}

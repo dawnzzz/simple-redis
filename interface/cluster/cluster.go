@@ -5,6 +5,7 @@ import "Dawndis/interface/redis"
 type PeerPicker interface {
 	PickNode(key string) (string, bool)
 	AddNodes(keys ...string)
+	GetAllNodes() []string
 }
 
 type PeerGetter interface {

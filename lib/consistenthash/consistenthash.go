@@ -12,6 +12,7 @@ type HashFunc func([]byte) uint32
 type Map struct {
 	hashFunc HashFunc // 哈希函数
 	replicas int      // 虚拟节点
+	nodes    []string
 	keys     []int
 	hashMap  map[int]string // 保存哈希值与实际节点的映射关系
 }
@@ -46,6 +47,8 @@ func (m *Map) AddNodes(keys ...string) {
 			// 记录在哈希环中
 			m.hashMap[hash] = key
 		}
+
+		m.nodes = append(m.nodes, key)
 	}
 
 	sort.Ints(m.keys) // 排序
@@ -71,4 +74,8 @@ func (m *Map) PickNode(key string) (string, bool) {
 	node := m.keys[index]
 
 	return m.hashMap[node], true
+}
+
+func (m *Map) GetAllNodes() []string {
+	return m.nodes
 }

@@ -2,8 +2,12 @@ package cluster
 
 import (
 	"Dawndis/database/engine"
+	"Dawndis/datastruct/dict"
+	"Dawndis/interface/cluster"
 	"Dawndis/interface/redis"
 	"Dawndis/lib/consistenthash"
+	"github.com/bwmarrin/snowflake"
+	"hash/crc32"
 )
 
 const (
@@ -12,9 +16,12 @@ const (
 
 // Cluster 用于和集群中的主机进行交互
 type Cluster struct {
-	self    string                // 本机地址，如 127.0.0.1:6107
-	peers   PeerPicker            // 一致性哈希，用于选择节点
-	getters map[string]PeerGetter // 用于和远程节点通信
+	self    string                        // 本机地址，如 127.0.0.1:6107
+	peers   cluster.PeerPicker            // 一致性哈希，用于选择节点
+	getters map[string]cluster.PeerGetter // 用于和远程节点通信
+
+	idGenerator    *snowflake.Node  // snowflake id生成器，用于生成分布式事务的id
+	transactionMap *dict.SimpleDict // 记录所有的分布式事务（本地）
 }
 
 func NewCluster(self string) *Cluster {
@@ -22,10 +29,15 @@ func NewCluster(self string) *Cluster {
 		return nil
 	}
 
+	node, _ := snowflake.NewNode(int64(crc32.ChecksumIEEE([]byte(self))) % 1024)
+
 	return &Cluster{
 		self:    self,
 		peers:   consistenthash.New(replicasNum, nil),
-		getters: make(map[string]PeerGetter),
+		getters: make(map[string]cluster.PeerGetter),
+
+		idGenerator:    node,
+		transactionMap: dict.MakeSimpleDict(),
 	}
 }
 
@@ -43,6 +55,11 @@ func (cluster *Cluster) AddPeers(peers ...string) {
 func (cluster *Cluster) Exec(client redis.Connection, dbIndex int, db *engine.DB, cmdLine [][]byte) redis.Reply {
 	if mustLocal(cmdLine) {
 		// 在本地执行
+		return db.Exec(client, cmdLine)
+	}
+
+	if client.GetMultiStatus() {
+		// 在multi状态下，也在本地检查是否有语法错误
 		return db.Exec(client, cmdLine)
 	}
 

@@ -54,3 +54,17 @@ func isReadOnlyCommand(name string) bool {
 
 	return false
 }
+func GetWriteReadKeys(cmdLine [][]byte) ([]string, []string) {
+	cmdName := strings.ToLower(string(cmdLine[0]))
+	cmdName = strings.ToLower(cmdName)
+
+	cmd, ok := cmdTable[cmdName]
+	if !ok {
+		return nil, nil
+	}
+
+	prepare := cmd.prepare
+	write, read := prepare(cmdLine[1:])
+
+	return write, read
+}

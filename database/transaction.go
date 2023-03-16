@@ -5,8 +5,8 @@ import (
 	"Dawndis/redis/protocol/reply"
 )
 
-// StartMulti 客户端开启 Multi 事务
-func StartMulti(client redis.Connection, args [][]byte) redis.Reply {
+// StartMultiStandalone 客户端开启 Multi 事务
+func StartMultiStandalone(client redis.Connection, args [][]byte) redis.Reply {
 	if len(args) != 0 { // 参数数量不正确
 		return reply.MakeArgNumErrReply("multi")
 	}
@@ -25,10 +25,14 @@ func StartMulti(client redis.Connection, args [][]byte) redis.Reply {
 
 // ExecMultiStandalone 单机模式执行multi队列中的命令
 func ExecMultiStandalone(s *Server, client redis.Connection, args [][]byte) redis.Reply {
-	defer client.SetMultiStatus(false) // 结束multi
-	if len(args) != 0 {                // 参数数量不正确
-		return reply.MakeArgNumErrReply("multi")
+	if !client.GetMultiStatus() {
+		return reply.MakeErrReply("ERR EXEC without MULTI")
 	}
+
+	if len(args) != 0 { // 参数数量不正确
+		return reply.MakeArgNumErrReply("exec")
+	}
+	defer client.SetMultiStatus(false) // 结束multi
 
 	// 检查是否有语法错误，若有语法错误则一律不执行
 	if len(client.GetSyntaxErrQueue()) > 0 {
@@ -46,12 +50,12 @@ func ExecMultiStandalone(s *Server, client redis.Connection, args [][]byte) redi
 	return localDB.ExecMulti(client)
 }
 
-// ExecDiscard 放弃执行multi队列中的命令
-func ExecDiscard(client redis.Connection, args [][]byte) redis.Reply {
+// DiscardMultiStandalone 放弃执行multi队列中的命令
+func DiscardMultiStandalone(client redis.Connection, args [][]byte) redis.Reply {
 	defer client.SetMultiStatus(false) // 放弃执行
 
 	if len(args) != 0 { // 参数数量不正确
-		return reply.MakeArgNumErrReply("multi")
+		return reply.MakeArgNumErrReply("discard")
 	}
 
 	if !client.GetMultiStatus() { // 没有multi
@@ -61,11 +65,11 @@ func ExecDiscard(client redis.Connection, args [][]byte) redis.Reply {
 	return reply.MakeOkReply()
 }
 
-// ExecWatch 执行WATCH命令
-func ExecWatch(s *Server, client redis.Connection, args [][]byte) redis.Reply {
+// ExecWatchStandalone 执行WATCH命令
+func ExecWatchStandalone(s *Server, client redis.Connection, args [][]byte) redis.Reply {
 
 	if len(args) <= 0 { // 参数数量不正确
-		return reply.MakeArgNumErrReply("multi")
+		return reply.MakeArgNumErrReply("watch")
 	}
 
 	// 选择数据库
@@ -85,10 +89,10 @@ func ExecWatch(s *Server, client redis.Connection, args [][]byte) redis.Reply {
 	return reply.MakeOkReply()
 }
 
-// ExecUnWatch 取消对所有key的watch
-func ExecUnWatch(client redis.Connection, args [][]byte) redis.Reply {
+// ExecUnWatchStandalone 取消对所有key的watch
+func ExecUnWatchStandalone(client redis.Connection, args [][]byte) redis.Reply {
 	if len(args) != 0 { // 参数数量不正确
-		return reply.MakeArgNumErrReply("multi")
+		return reply.MakeArgNumErrReply("unwatch")
 	}
 
 	// 取消watch

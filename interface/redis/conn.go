@@ -23,4 +23,6 @@ type Connection interface {
 	EnqueueSyntaxErrQueue(Reply)
 	GetWatching() map[string]uint32
 	CancelWatching()
+	SetTxID(string)
+	GetTxID() string
 }

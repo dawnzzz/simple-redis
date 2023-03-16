@@ -103,7 +103,7 @@ func (db *DB) execNormalCommand(cmdLine [][]byte) redis.Reply {
 	return r
 }
 
-func (db *DB) execWithLock(cmdLine CmdLine) redis.Reply {
+func (db *DB) ExecWithLock(cmdLine CmdLine) redis.Reply {
 	if errReply := db.CheckSyntaxErr(cmdLine); errReply != nil {
 		// 检查是否有语法错误
 		return errReply

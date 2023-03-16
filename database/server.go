@@ -85,15 +85,15 @@ func (s *Server) execStandalone(client redis.Connection, cmdLine [][]byte) redis
 	case "rewriteaof":
 		return RewriteAof(s, cmdLine[1:])
 	case "multi":
-		return StartMulti(client, cmdLine[1:])
+		return StartMultiStandalone(client, cmdLine[1:])
 	case "exec":
 		return ExecMultiStandalone(s, client, cmdLine[1:])
 	case "discard":
-		return ExecDiscard(client, cmdLine[1:])
+		return DiscardMultiStandalone(client, cmdLine[1:])
 	case "watch":
-		return ExecWatch(s, client, cmdLine[1:])
+		return ExecWatchStandalone(s, client, cmdLine[1:])
 	case "unwatch":
-		return ExecUnWatch(client, cmdLine[1:])
+		return ExecUnWatchStandalone(client, cmdLine[1:])
 	}
 
 	// normal commands
@@ -130,6 +130,27 @@ func (s *Server) execCluster(client redis.Connection, cmdLine [][]byte) redis.Re
 		return BGRewriteAof(s, cmdLine[1:])
 	case "rewriteaof":
 		return RewriteAof(s, cmdLine[1:])
+	case "multi":
+		return s.cluster.StartMultiCluster(client, cmdLine[1:])
+	case "exec":
+		return s.cluster.ExecMultiCluster(client, cmdLine[1:])
+	case "discard":
+		return s.cluster.DiscardMultiCluster(client, cmdLine[1:])
+	case "try":
+		dbIndex := client.GetDBIndex()
+		localDB, errReply := s.selectDB(dbIndex)
+		if errReply != nil {
+			return errReply
+		}
+		return s.cluster.Try(localDB, cmdLine[1:])
+	case "commit":
+		return s.cluster.Commit(cmdLine[1:])
+	case "cancel":
+		return s.cluster.Cancel(cmdLine[1:])
+		//case "watch":
+		//	return ExecWatchStandalone(s, client, cmdLine[1:])
+		//case "unwatch":
+		//	return ExecUnWatchStandalone(client, cmdLine[1:])
 	}
 
 	// normal commands
