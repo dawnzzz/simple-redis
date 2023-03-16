@@ -33,6 +33,7 @@ func ExecMultiStandalone(s *Server, client redis.Connection, args [][]byte) redi
 		return reply.MakeArgNumErrReply("exec")
 	}
 	defer client.SetMultiStatus(false) // 结束multi
+	defer client.CancelWatching()      // 取消watch
 
 	// 检查是否有语法错误，若有语法错误则一律不执行
 	if len(client.GetSyntaxErrQueue()) > 0 {
@@ -52,7 +53,6 @@ func ExecMultiStandalone(s *Server, client redis.Connection, args [][]byte) redi
 
 // DiscardMultiStandalone 放弃执行multi队列中的命令
 func DiscardMultiStandalone(client redis.Connection, args [][]byte) redis.Reply {
-	defer client.SetMultiStatus(false) // 放弃执行
 
 	if len(args) != 0 { // 参数数量不正确
 		return reply.MakeArgNumErrReply("discard")
@@ -61,6 +61,9 @@ func DiscardMultiStandalone(client redis.Connection, args [][]byte) redis.Reply 
 	if !client.GetMultiStatus() { // 没有multi
 		return reply.MakeErrReply("ERR DISCARD without MULTI")
 	}
+
+	defer client.SetMultiStatus(false) // 放弃执行
+	defer client.CancelWatching()      // 取消watch
 
 	return reply.MakeOkReply()
 }
