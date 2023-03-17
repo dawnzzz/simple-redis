@@ -22,6 +22,7 @@ type Cluster struct {
 
 	idGenerator    *snowflake.Node  // snowflake id生成器，用于生成分布式事务的id
 	transactionMap *dict.SimpleDict // 记录所有的分布式事务（本地）
+	coordinatorMap *dict.SimpleDict // 记录事务协调者
 }
 
 func NewCluster(self string) *Cluster {
@@ -38,6 +39,7 @@ func NewCluster(self string) *Cluster {
 
 		idGenerator:    node,
 		transactionMap: dict.MakeSimpleDict(),
+		coordinatorMap: dict.MakeSimpleDict(),
 	}
 }
 

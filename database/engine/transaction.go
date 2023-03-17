@@ -11,10 +11,10 @@ import (
 
 // ExecMulti multi命令执行阶段
 func (db *DB) ExecMulti(c redis.Connection) redis.Reply {
-	return db.execMultiCommand(c.GetEnqueuedCmdLine(), c.GetWatching())
+	return db.ExecMultiCommand(c.GetEnqueuedCmdLine(), c.GetWatching())
 }
 
-func (db *DB) execMultiCommand(cmdLines [][][]byte, watching map[string]uint32) redis.Reply {
+func (db *DB) ExecMultiCommand(cmdLines [][][]byte, watching map[string]uint32) redis.Reply {
 	// 此时不需要检查是否有语法错误，因为在排队过程中已经检查过了
 
 	// // 获取所有需要加锁的key
@@ -100,7 +100,7 @@ func (db *DB) execMultiCommand(cmdLines [][][]byte, watching map[string]uint32) 
 
 	// 未开启原子性事务，或者执行成功
 	// 写命令增加版本
-	db.addVersion(writeKeys...)
+	db.AddVersion(writeKeys...)
 
 	return reply.MakeMultiBulkStringReply(results)
 }

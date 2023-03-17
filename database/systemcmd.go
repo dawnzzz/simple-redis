@@ -38,6 +38,11 @@ func SelectDB(c redis.Connection, args [][]byte, dbNum int) redis.Reply {
 		return errReply
 	}
 
+	if len(c.GetWatching()) > 0 {
+		// 无法在watching时使用select
+		return reply.MakeErrReply("cannot select database when watching")
+	}
+
 	if len(args) != 1 {
 		return reply.MakeErrReply("ERR wrong number of arguments for 'select' command")
 	}

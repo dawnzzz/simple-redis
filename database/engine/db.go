@@ -97,8 +97,10 @@ func (db *DB) execNormalCommand(cmdLine [][]byte) redis.Reply {
 	fun := cmd.executor
 	r, aofExpireCtx := fun(db, cmdLine[1:])
 	db.afterExec(r, aofExpireCtx, cmdLine)
-	// 非读命令执行增加版本
-	db.addVersion(write...)
+	// 写命令、执行成功增加版本
+	if !IsReadOnlyCommand(cmdName) && !reply.IsErrorReply(r) {
+		db.AddVersion(write...)
+	}
 
 	return r
 }

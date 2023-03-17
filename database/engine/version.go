@@ -1,7 +1,7 @@
 package engine
 
-// addVersion 为指定的keys版本号+1
-func (db *DB) addVersion(keys ...string) {
+// AddVersion 为指定的keys版本号+1
+func (db *DB) AddVersion(keys ...string) {
 	for _, key := range keys {
 		versionCode := db.GetVersion(key)
 		db.versionMap.Put(key, versionCode+1)

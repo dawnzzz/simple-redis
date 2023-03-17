@@ -46,7 +46,7 @@ func RegisterCommand(name string, executor ExecFunc, prepare PreFunc, arity int,
 	}
 }
 
-func isReadOnlyCommand(name string) bool {
+func IsReadOnlyCommand(name string) bool {
 	name = strings.ToLower(name)
 	if cmd, ok := cmdTable[name]; ok && (cmd.flags&FlagReadOnly > 0) {
 		return true
