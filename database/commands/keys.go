@@ -73,8 +73,20 @@ func execExpire(db *engine.DB, args [][]byte) (redis.Reply, *engine.AofExpireCtx
 	}
 }
 
+func execKeyVersion(db *engine.DB, args [][]byte) (redis.Reply, *engine.AofExpireCtx) {
+	key := string(args[0])
+
+	version := db.GetVersion(key)
+
+	return reply.MakeIntReply(int64(version)), &engine.AofExpireCtx{
+		NeedAof:  false,
+		ExpireAt: nil,
+	}
+}
+
 func init() {
-	engine.RegisterCommand("del", delExec, writeFirstKey, 2, engine.FlagWrite)
+	engine.RegisterCommand("Del", delExec, writeFirstKey, 2, engine.FlagWrite)
 	engine.RegisterCommand("ExpireAt", execExpireAt, writeFirstKey, 3, engine.FlagWrite)
 	engine.RegisterCommand("Expire", execExpire, writeFirstKey, 3, engine.FlagWrite)
+	engine.RegisterCommand("KeyVersion", execKeyVersion, writeFirstKey, 2, engine.FlagReadOnly)
 }
