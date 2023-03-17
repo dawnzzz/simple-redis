@@ -4,6 +4,8 @@ port: 6182
 databases: 16   # 数据库数量，至少为16
 password: 123456
 
+open_atomic_tx: false  # 是否开启原子性事务，默认为false，若开启则在multi阶段一条命令执行失败，队列中的所有命令全部回滚
+
 ###### AOF 持久化配置 #####
 append_only: false
 aof_filename: dump.aof

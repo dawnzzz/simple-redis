@@ -159,6 +159,25 @@ func (cluster *Cluster) Cancel(args [][]byte) redis.Reply {
 	return tx.Cancel()
 }
 
+func (cluster *Cluster) End(args [][]byte) redis.Reply {
+	if len(args) != 1 { // 参数数量不正确
+		return reply.MakeArgNumErrReply("end")
+	}
+
+	// 根据事务id获取相关事务
+	id := string(args[0])
+	var tx *tcc.Transaction
+	raw, ok := cluster.transactionMap.Get(id)
+	if !ok {
+		return reply.MakeErrReply("ERR END WITHOUT TRY")
+	}
+	tx, _ = raw.(*tcc.Transaction)
+
+	// 结束事务
+	defer cluster.transactionMap.Remove(id)
+	return tx.End()
+}
+
 func (cluster *Cluster) Watch(dbIndex int, db *engine.DB, client redis.Connection, args [][]byte) redis.Reply {
 	if client.GetMultiStatus() {
 		return reply.MakeErrReply("ERR WATCH inside MULTI is not allowed")

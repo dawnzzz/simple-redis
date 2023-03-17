@@ -1,6 +1,7 @@
 package tcc
 
 import (
+	"Dawndis/config"
 	"Dawndis/interface/cluster"
 	"Dawndis/interface/redis"
 	"Dawndis/lib/utils"
@@ -52,20 +53,43 @@ func (coordinator *Coordinator) ExecTx(cmdLines [][][]byte, watching map[string]
 		}
 	}
 
+	defer func() {
+		// 返回之前发送end消息，通知各个分布式节点结束事务
+		for peer := range groupByMap {
+			coordinator.sendEnd(peer)
+		}
+	}()
+
 	// 向各个节点提交/回滚分布式事务
 	replies := make(map[string]redis.Reply)
 	for peer := range groupByMap {
 		if needCancel {
-			// 回滚事务
+			// 取消事务
 			coordinator.sendCancel(peer)
 		} else {
 			// 提交事务
-			replies[peer] = coordinator.sendCommit(peer)
+			r := coordinator.sendCommit(peer)
+			if config.Properties.OpenAtomicTx && reply.IsErrorReply(r) {
+				// 如果开启了原子事务并且提交发生了错误，则进行所有的节点进行回滚
+				needCancel = true
+				break
+			}
+			replies[peer] = r
 		}
 	}
 
+	// 如果开启了原子事务，并且发生了错误，所有节点进行回滚
+	if needCancel && config.Properties.OpenAtomicTx {
+		for peer := range groupByMap {
+			// 取消事务，进行回滚
+			coordinator.sendCancel(peer)
+		}
+
+		return reply.MakeErrReply("EXECABORT Transaction rollback because of errors during executing. (atomic tx is open)")
+	}
+
 	if needCancel {
-		// 回滚，返回错误
+		// 没有开启原子事务，但是发送了错误（如watch的key变化了），则返回(nil)
 		return reply.MakeNullBulkStringReply()
 	}
 
@@ -183,4 +207,11 @@ func (coordinator *Coordinator) recombineReplies(replies map[string]redis.Reply)
 
 	// 合并
 	return reply.MakeMultiBulkStringReply(combinedArgs)
+}
+
+func (coordinator *Coordinator) sendEnd(peer string) {
+	// 获取getter
+	getter := coordinator.getters[peer]
+
+	getter.RemoteExec(coordinator.dbIndex, utils.StringsToCmdLine("end", coordinator.id))
 }

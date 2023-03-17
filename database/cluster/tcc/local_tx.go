@@ -1,12 +1,14 @@
 package tcc
 
 import (
+	"Dawndis/config"
 	"Dawndis/database/engine"
 	"Dawndis/interface/redis"
 	"Dawndis/lib/timewheel"
 	"Dawndis/logger"
 	"Dawndis/redis/protocol/reply"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -30,10 +32,13 @@ type Transaction struct {
 	readKeys    []string
 	watchedKeys map[string]uint32 // 记录watch时的版本
 
-	cmdLines [][][]byte // 本次事务中包含的命令
-	undoLogs [][][]byte // 本次事务的undo log
+	cmdLines       [][][]byte   // 本次事务中包含的命令
+	undoLogs       [][][][]byte // 本次事务的undo log
+	addVersionKeys []string     // 需要增加版本的key
 
 	db *engine.DB
+
+	mu sync.Mutex
 }
 
 // NewTransaction 开启一个TCC本地事务
@@ -78,7 +83,6 @@ func (tx *Transaction) Try() redis.Reply {
 
 	// 在时间轮中添加任务, 自动回滚超时未提交的事务
 	taskKey := tx.id
-
 	timewheel.Delay(maxLockTime, taskKey, func() {
 		if tx.phase == phaseTry {
 			logger.Info("abort transaction: " + tx.id)
@@ -118,9 +122,9 @@ func (tx *Transaction) SaveVersion(cmdLine [][]byte) redis.Reply {
 
 // Commit TCC事务的commit阶段
 func (tx *Transaction) Commit() redis.Reply {
+	tx.mu.Lock() // Commit互斥进行操作，防止commit时调用cancel，发生冲突
+	defer tx.mu.Unlock()
 	defer func() {
-		// 解锁
-		tx.db.RWUnLocks(tx.writeKeys, tx.readKeys)
 		// 设置阶段
 		tx.phase = phaseCommit
 	}()
@@ -128,13 +132,31 @@ func (tx *Transaction) Commit() redis.Reply {
 	// 依次执行命令
 	var results [][]byte // 存储命令执行的结果
 	for _, cmdLine := range tx.cmdLines {
-		r := tx.db.ExecWithLock(cmdLine)
 		cmdName := string(cmdLine[0])
 		key := string(cmdLine[1])
-		if !engine.IsReadOnlyCommand(cmdName) && !reply.IsErrorReply(r) {
-			// 写命令、执行成功，则增加版本
-			tx.db.AddVersion(key)
+		if !engine.IsReadOnlyCommand(cmdName) {
+			// 写命令，则记录需要add版本的key
+			tx.addVersionKeys = append(tx.addVersionKeys, key)
+			if config.Properties.OpenAtomicTx {
+				// 开启了原子性事务，则记录undo log
+				tx.undoLogs = append(tx.undoLogs, tx.db.GetUndoLog(key))
+			}
 		}
+
+		// 执行命令
+		r := tx.db.ExecWithLock(cmdLine)
+
+		if config.Properties.OpenAtomicTx && reply.IsErrorReply(r) {
+			// 开启了原子性事务，并且如果发生错误，直接返回错误
+			if !engine.IsReadOnlyCommand(cmdName) {
+				// 删除错误命令的undo log，不需要增加版本号
+				tx.addVersionKeys = tx.addVersionKeys[:len(tx.addVersionKeys)-1]
+				tx.undoLogs = tx.undoLogs[:len(tx.undoLogs)-1]
+			}
+
+			return r
+		}
+
 		results = append(results, []byte(r.DataString()))
 	}
 
@@ -143,12 +165,55 @@ func (tx *Transaction) Commit() redis.Reply {
 
 // Cancel TCC事务的cancel阶段
 func (tx *Transaction) Cancel() redis.Reply {
+	tx.mu.Lock() // Cancel互斥进行操作，防止commit时调用cancel，发生冲突
+	defer tx.mu.Unlock()
 	defer func() {
-		// 解锁
-		tx.db.RWUnLocks(tx.writeKeys, tx.readKeys)
 		// 设置阶段
 		tx.phase = phaseCancel
 	}()
+
+	// 从后向前依次执行undo日志，只有开启原子性事务时，len(tx.undoLogs)才可能大于0
+	for i := len(tx.undoLogs) - 1; i >= 0; i-- {
+		undoLog := tx.undoLogs[i]
+		if len(undoLog) == 0 {
+			continue
+		}
+
+		for _, cmdLine := range undoLog {
+			tx.db.ExecWithLock(cmdLine)
+		}
+
+	}
+
+	// 清空
+	tx.undoLogs = nil
+
+	return reply.MakeOkReply()
+}
+
+// End 结束分布式事务
+func (tx *Transaction) End() redis.Reply {
+	tx.mu.Lock()
+	defer tx.mu.Unlock()
+
+	// 检查阶段是否是commit或者cancel
+	if tx.phase != phaseCommit && tx.phase != phaseCancel {
+		return reply.MakeErrReply("ERR END ERROR")
+	}
+
+	defer func() {
+		// 解锁
+		tx.db.RWUnLocks(tx.writeKeys, tx.readKeys)
+	}()
+
+	// 取消时间轮任务
+	taskKey := tx.id
+	timewheel.Cancel(taskKey)
+
+	if tx.phase == phaseCommit {
+		// 若成功提交，则增加版本
+		tx.db.AddVersion(tx.addVersionKeys...)
+	}
 
 	return reply.MakeOkReply()
 }

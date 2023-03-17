@@ -147,6 +147,8 @@ func (s *Server) execCluster(client redis.Connection, cmdLine [][]byte) redis.Re
 		return s.cluster.Commit(cmdLine[1:])
 	case "cancel":
 		return s.cluster.Cancel(cmdLine[1:])
+	case "end":
+		return s.cluster.End(cmdLine[1:])
 	case "watch":
 		dbIndex := client.GetDBIndex()
 		localDB, errReply := s.selectDB(dbIndex)
