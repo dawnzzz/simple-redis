@@ -62,6 +62,7 @@ func SetupConfig(configFilename string) {
 
 	viper.SetConfigFile(configFilename)
 	viper.SetConfigType("yaml")
+	setDefault() // 设置默认值
 	if err := viper.ReadInConfig(); err != nil {
 		logger.Fatalf("setup config err, %v", err)
 	}
@@ -76,7 +77,15 @@ func SetupConfig(configFilename string) {
 }
 
 func setDefault() {
-	// todo 设置默认值
+	viper.SetDefault("bind", "0.0.0.0")
+	viper.SetDefault("port", 6179)
+	viper.SetDefault("databases", 16)
+
+	viper.SetDefault("append_only", true)
+	viper.SetDefault("aof_filename", "dump.aof")
+	viper.SetDefault("auto_aof_rewrite", true)
+	viper.SetDefault("auto_aof_rewrite_percentage", int64(100))
+	viper.SetDefault("auto_aov_rewrite_min_size", int64(64))
 }
 
 func fileExists(filename string) bool {
