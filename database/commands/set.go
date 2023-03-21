@@ -184,7 +184,7 @@ func execSPop(db *engine.DB, args [][]byte) (redis.Reply, *engine.AofExpireCtx) 
 		var err error
 		count, err = strconv.Atoi(string(args[1]))
 		if err != nil {
-			return reply.MakeErrReply("(error) ERR value is not an integer or out of range"), nil
+			return reply.MakeErrReply("ERR value is not an integer or out of range"), nil
 		}
 	}
 
@@ -221,7 +221,7 @@ func execSRandMember(db *engine.DB, args [][]byte) (redis.Reply, *engine.AofExpi
 		var err error
 		count, err = strconv.Atoi(string(args[1]))
 		if err != nil {
-			return reply.MakeErrReply("(error) ERR value is not an integer or out of range"), nil
+			return reply.MakeErrReply("ERR value is not an integer or out of range"), nil
 		}
 	}
 
