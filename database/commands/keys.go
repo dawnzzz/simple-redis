@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func delExec(db *engine.DB, args [][]byte) (redis.Reply, *engine.AofExpireCtx) {
+func execDel(db *engine.DB, args [][]byte) (redis.Reply, *engine.AofExpireCtx) {
 	key := string(args[0])
 
 	// 首先查询是否存在
@@ -84,9 +84,40 @@ func execKeyVersion(db *engine.DB, args [][]byte) (redis.Reply, *engine.AofExpir
 	}
 }
 
+func execExist(db *engine.DB, args [][]byte) (redis.Reply, *engine.AofExpireCtx) {
+	key := string(args[0])
+
+	_, exist := db.GetEntity(key)
+	if !exist {
+		return reply.MakeIntReply(0), nil
+	}
+
+	return reply.MakeIntReply(1), nil
+}
+
+func execPersist(db *engine.DB, args [][]byte) (redis.Reply, *engine.AofExpireCtx) {
+	key := string(args[0])
+
+	_, exists := db.GetEntity(key)
+	if !exists {
+		return reply.MakeIntReply(0), nil
+	}
+
+	_, exists = db.TTLMap().Get(key)
+	if !exists {
+		return reply.MakeIntReply(0), nil
+	}
+
+	db.Persist(key)
+
+	return reply.MakeIntReply(1), &engine.AofExpireCtx{NeedAof: true}
+}
+
 func init() {
-	engine.RegisterCommand("Del", delExec, writeFirstKey, 2, engine.FlagWrite)
+	engine.RegisterCommand("Del", execDel, writeFirstKey, 2, engine.FlagWrite)
 	engine.RegisterCommand("ExpireAt", execExpireAt, writeFirstKey, 3, engine.FlagWrite)
 	engine.RegisterCommand("Expire", execExpire, writeFirstKey, 3, engine.FlagWrite)
 	engine.RegisterCommand("KeyVersion", execKeyVersion, writeFirstKey, 2, engine.FlagReadOnly)
+	engine.RegisterCommand("Exist", execExist, readFirstKey, 2, engine.FlagReadOnly)
+	engine.RegisterCommand("Persist", execPersist, writeFirstKey, 2, engine.FlagWrite)
 }

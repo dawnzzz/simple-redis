@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"Dawndis/datastruct/dict"
 	"Dawndis/lib/timewheel"
 	"Dawndis/logger"
 	"time"
@@ -78,4 +79,8 @@ func (db *DB) IsExpired(key string) bool {
 	}
 
 	return expired
+}
+
+func (db *DB) TTLMap() dict.Dict {
+	return db.ttlMap
 }
