@@ -29,6 +29,10 @@ func (r *MultiBulkStringReply) ToBytes() []byte {
 }
 
 func (r *MultiBulkStringReply) DataString() string {
+	if len(r.Args) == 0 {
+		return "(empty list or set)"
+	}
+
 	var builder strings.Builder
 	for i, arg := range r.Args {
 		builder.WriteString(strconv.Itoa(i+1) + ") ")
