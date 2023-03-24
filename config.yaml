@@ -3,7 +3,7 @@ bind: 0.0.0.0
 port: 6179
 password: 123456
 databases: 16   # 数据库数量，至少为16
-keepalive: 60   # 多少秒进行一次心跳检测，0为不检查
+keepalive: 0   # 多少秒进行一次心跳检测，0为不检查
 
 open_atomic_tx: false  # 是否开启原子性事务，默认为false，若开启则在multi阶段一条命令执行失败，队列中的所有命令全部回滚
 
