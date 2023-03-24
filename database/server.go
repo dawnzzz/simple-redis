@@ -5,6 +5,7 @@ import (
 	"Dawndis/database/cluster"
 	_ "Dawndis/database/commands"
 	"Dawndis/database/engine"
+	"Dawndis/database/publish"
 	"Dawndis/database/rdb/aof"
 	"Dawndis/interface/database"
 	"Dawndis/interface/redis"
@@ -28,6 +29,7 @@ type Server struct {
 	rewriting    atomic.Bool
 	closed       chan struct{}
 	cluster      *cluster.Cluster
+	publish      publish.Publish
 }
 
 // NewStandaloneServer creates a standalone redis server
@@ -94,6 +96,12 @@ func (s *Server) execStandalone(client redis.Connection, cmdLine [][]byte) redis
 		return ExecWatchStandalone(s, client, cmdLine[1:])
 	case "unwatch":
 		return ExecUnWatchStandalone(client, cmdLine[1:])
+	case "publish":
+		return Publish(s, cmdLine[1:])
+	case "subscribe":
+		return Subscribe(s, client, cmdLine[1:])
+	case "unsubscribe":
+		return UnSubscribe(s, client, cmdLine[1:])
 	}
 
 	// normal commands
@@ -236,7 +244,8 @@ func (s *Server) mustSelectDB(dbIndex int) *engine.DB {
 }
 
 func (s *Server) AfterClientClose(c redis.Connection) {
-	// TODO
+	// 客户端关闭时取消所有订阅
+	UnSubscribe(s, c, nil)
 }
 
 func (s *Server) Close() {
@@ -248,6 +257,8 @@ func (s *Server) Close() {
 	if s.cluster != nil {
 		s.cluster.Close()
 	}
+
+	s.publish.Close()
 }
 
 func (s *Server) GetDBSize(dbIndex int) (int, int) {

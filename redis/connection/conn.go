@@ -32,6 +32,8 @@ type Connection struct {
 	syntaxErrQueue []redis.Reply     // 事务中的语法错误
 	watching       map[string]uint32 // 正在WATCH的key值
 	TxID           string            // 事务ID，在分布式事务中用到
+
+	subscribeChannels map[string]struct{} // 订阅的频道
 }
 
 var connPool = sync.Pool{

@@ -25,4 +25,9 @@ type Connection interface {
 	CancelWatching()
 	SetTxID(string)
 	GetTxID() string
+
+	AddSubscribeChannel(...string)
+	CancelSubscribeChannel(...string)
+	GetSubscribeNum() int
+	GetSubscribes() []string
 }

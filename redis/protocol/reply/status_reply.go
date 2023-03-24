@@ -64,3 +64,21 @@ func (r *PongReply) ToBytes() []byte {
 func (r *PongReply) DataString() string {
 	return pongDataString
 }
+
+// NoReply respond nothing, for commands like subscribe
+type NoReply struct{}
+
+func MakeNoReply() *NoReply {
+	return &NoReply{}
+}
+
+var noBytes = []byte("")
+
+// ToBytes marshal redis.Reply
+func (r *NoReply) ToBytes() []byte {
+	return noBytes
+}
+
+func (r *NoReply) DataString() string {
+	return ""
+}
