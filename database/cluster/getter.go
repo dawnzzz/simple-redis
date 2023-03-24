@@ -61,7 +61,7 @@ func newGetter(addr string) *getter {
 		}
 
 		poolMap[dbIndex] = pool.New(factory, finalizer, checkAlive, pool.Config{
-			MaxIdleNum:   1,
+			MaxIdleNum:   8,
 			MaxActiveNum: 16,
 			MaxRetryNum:  1,
 		})
