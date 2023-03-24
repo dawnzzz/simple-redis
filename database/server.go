@@ -168,6 +168,18 @@ func (s *Server) execCluster(client redis.Connection, cmdLine [][]byte) redis.Re
 		return s.cluster.Watch(dbIndex, localDB, client, cmdLine[1:])
 	case "unwatch":
 		return s.cluster.UnWatch(client, cmdLine[1:])
+	case "subscribe":
+		return Subscribe(s, client, cmdLine[1:])
+	case "unsubscribe":
+		return UnSubscribe(s, client, cmdLine[1:])
+	case "singlepublish":
+		return Publish(s, cmdLine[1:])
+	case "singlepubsub":
+		return PubSub(s, cmdLine[1:])
+	case "publish":
+		return PublishCluster(s, cmdLine[1:])
+	case "pubsub":
+		return PubSubCluster(s, cmdLine[1:])
 	}
 
 	// normal commands

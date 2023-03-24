@@ -2,7 +2,6 @@ package publish
 
 import (
 	"Dawndis/interface/redis"
-	"strconv"
 	"sync"
 )
 
@@ -21,6 +20,10 @@ func (pub *Publish) Subscribe(client redis.Connection, names ...string) {
 	}
 
 	for _, name := range names {
+		if len(name) == 0 {
+			continue
+		}
+
 		c, ok := pub.channels[name]
 		if !ok {
 			// 如果不存在，新建一个管道
@@ -69,43 +72,55 @@ func (pub *Publish) UnSubscribe(client redis.Connection, names ...string) {
 
 }
 
-func (pub *Publish) ActiveChannels() [][]byte {
-	activeChannels := make([][]byte, 0, len(pub.channels))
+func (pub *Publish) ActiveChannels() []string {
+	activeChannels := make([]string, 0, len(pub.channels))
 	for name, channel := range pub.channels {
+		if len(name) == 0 {
+			continue
+		}
+
 		if channel.subscriberNum > 0 {
-			activeChannels = append(activeChannels, []byte(name))
+			activeChannels = append(activeChannels, name)
 		}
 	}
 
 	return activeChannels
 }
 
-func (pub *Publish) SubscribersNum(names ...string) [][]byte {
-	var result [][]byte
+func (pub *Publish) SubscribersNum(names ...string) ([]string, []int) {
+	var channels []string
+	var nums []int
 
 	if len(names) == 0 {
 		// 查询所有频道的订阅者数量
 		for name, channel := range pub.channels {
-			result = append(result, []byte(name))
-			num := strconv.Itoa(channel.subscriberNum)
-			result = append(result, []byte(num))
+			if len(name) == 0 {
+				continue
+			}
+
+			channels = append(channels, name)
+			nums = append(nums, channel.subscriberNum)
 		}
 
-		return result
+		return channels, nums
 	}
 
 	// 查询指定频道订阅者
 	for _, name := range names {
-		num := "0"
+		if len(name) == 0 {
+			continue
+		}
+
+		num := 0
 		channel, ok := pub.channels[name]
 		if ok {
-			num = strconv.Itoa(channel.subscriberNum)
+			num = channel.subscriberNum
 		}
-		result = append(result, []byte(name))
-		result = append(result, []byte(num))
+		channels = append(channels, name)
+		nums = append(nums, num)
 	}
 
-	return result
+	return channels, nums
 }
 
 func (pub *Publish) Close() {

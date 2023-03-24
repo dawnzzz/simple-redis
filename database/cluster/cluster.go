@@ -6,6 +6,7 @@ import (
 	"Dawndis/interface/cluster"
 	"Dawndis/interface/redis"
 	"Dawndis/lib/consistenthash"
+	"Dawndis/redis/protocol/reply"
 	"github.com/bwmarrin/snowflake"
 	"hash/crc32"
 )
@@ -74,6 +75,15 @@ func (cluster *Cluster) Exec(client redis.Connection, dbIndex int, db *engine.DB
 
 	// 远程执行
 	return cluster.getters[peer].RemoteExec(dbIndex, cmdLine)
+}
+
+func (cluster *Cluster) ExecInPeer(peer string, dbIndex int, cmdLine [][]byte) redis.Reply {
+	getter, ok := cluster.getters[peer]
+	if !ok {
+		return reply.MakeErrReply("ERR Cluster Peers error")
+	}
+
+	return getter.RemoteExec(dbIndex, cmdLine)
 }
 
 func (cluster *Cluster) Close() {
