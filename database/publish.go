@@ -3,6 +3,7 @@ package database
 import (
 	"Dawndis/interface/redis"
 	"Dawndis/redis/protocol/reply"
+	"strings"
 )
 
 var (
@@ -56,4 +57,42 @@ func Subscribe(s *Server, client redis.Connection, args [][]byte) redis.Reply {
 	s.publish.Subscribe(client, names...)
 
 	return reply.MakeNoReply()
+}
+
+func PubSub(s *Server, args [][]byte) redis.Reply {
+	if len(args) < 1 {
+		return reply.MakeArgNumErrReply("pubsub")
+	}
+	subCommand := strings.ToLower(string(args[0])) // 子命令
+
+	switch subCommand {
+	case "channels":
+		// 列出当前的活跃频道。
+		// 活跃频道指的是那些至少有一个订阅者的频道
+		if len(args) != 1 {
+			return reply.MakeArgNumErrReply("pubsub channels")
+		}
+		activeChannels := s.publish.ActiveChannels()
+		return reply.MakeMultiBulkStringReply(activeChannels)
+	case "numsub":
+		// 返回频道的订阅者数量
+		var replyArgs [][]byte
+
+		if len(args) == 1 {
+			// 查询所有频道
+			replyArgs = s.publish.SubscribersNum()
+		} else {
+			// 查询给定频道
+			names := make([]string, len(args[1:]))
+			for i, arg := range args[1:] {
+				names[i] = string(arg)
+			}
+
+			replyArgs = s.publish.SubscribersNum(names...)
+		}
+
+		return reply.MakeMultiBulkStringReply(replyArgs)
+	default:
+		return reply.MakeErrReply("ERR Unknown PUBSUB subcommand or wrong number of arguments for '" + subCommand + "'")
+	}
 }

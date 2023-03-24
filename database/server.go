@@ -102,6 +102,8 @@ func (s *Server) execStandalone(client redis.Connection, cmdLine [][]byte) redis
 		return Subscribe(s, client, cmdLine[1:])
 	case "unsubscribe":
 		return UnSubscribe(s, client, cmdLine[1:])
+	case "pubsub":
+		return PubSub(s, cmdLine[1:])
 	}
 
 	// normal commands

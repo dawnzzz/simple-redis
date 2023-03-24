@@ -2,6 +2,7 @@ package publish
 
 import (
 	"Dawndis/interface/redis"
+	"strconv"
 	"sync"
 )
 
@@ -66,6 +67,45 @@ func (pub *Publish) UnSubscribe(client redis.Connection, names ...string) {
 		}
 	}
 
+}
+
+func (pub *Publish) ActiveChannels() [][]byte {
+	activeChannels := make([][]byte, 0, len(pub.channels))
+	for name, channel := range pub.channels {
+		if channel.subscriberNum > 0 {
+			activeChannels = append(activeChannels, []byte(name))
+		}
+	}
+
+	return activeChannels
+}
+
+func (pub *Publish) SubscribersNum(names ...string) [][]byte {
+	var result [][]byte
+
+	if len(names) == 0 {
+		// 查询所有频道的订阅者数量
+		for name, channel := range pub.channels {
+			result = append(result, []byte(name))
+			num := strconv.Itoa(channel.subscriberNum)
+			result = append(result, []byte(num))
+		}
+
+		return result
+	}
+
+	// 查询指定频道订阅者
+	for _, name := range names {
+		num := "0"
+		channel, ok := pub.channels[name]
+		if ok {
+			num = strconv.Itoa(channel.subscriberNum)
+		}
+		result = append(result, []byte(name))
+		result = append(result, []byte(num))
+	}
+
+	return result
 }
 
 func (pub *Publish) Close() {
