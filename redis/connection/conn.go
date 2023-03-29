@@ -81,6 +81,12 @@ func (c *Connection) Close() error {
 	c.sendingData = wait.Wait{}
 	c.password = ""
 	c.selectedDB = 0
+	c.isMulti = false
+	c.queue = nil
+	c.syntaxErrQueue = nil
+	c.watching = nil
+	c.TxID = ""
+	c.subscribeChannels = nil
 	connPool.Put(c)
 	return nil
 }
