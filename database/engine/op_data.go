@@ -1,8 +1,8 @@
 package engine
 
 import (
-	"Dawndis/interface/database"
-	"Dawndis/lib/timewheel"
+	"github.com/dawnzzz/simple-redis/interface/database"
+	"github.com/dawnzzz/simple-redis/lib/timewheel"
 )
 
 /* ---- Data Access ----- */

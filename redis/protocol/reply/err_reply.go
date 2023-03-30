@@ -1,6 +1,6 @@
 package reply
 
-import "Dawndis/interface/redis"
+import "github.com/dawnzzz/simple-redis/interface/redis"
 
 type ErrorReply interface {
 	redis.Reply

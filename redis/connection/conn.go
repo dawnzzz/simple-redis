@@ -1,9 +1,9 @@
 package connection
 
 import (
-	"Dawndis/interface/redis"
-	"Dawndis/lib/sync/wait"
-	"Dawndis/logger"
+	"github.com/dawnzzz/simple-redis/interface/redis"
+	"github.com/dawnzzz/simple-redis/lib/sync/wait"
+	"github.com/dawnzzz/simple-redis/logger"
 	"net"
 	"sync"
 	"time"

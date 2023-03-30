@@ -1,12 +1,12 @@
 package cluster
 
 import (
-	"Dawndis/config"
-	"Dawndis/interface/redis"
-	"Dawndis/lib/pool"
-	"Dawndis/lib/utils"
-	"Dawndis/redis/client"
-	"Dawndis/redis/protocol/reply"
+	"github.com/dawnzzz/simple-redis/config"
+	"github.com/dawnzzz/simple-redis/interface/redis"
+	"github.com/dawnzzz/simple-redis/lib/pool"
+	"github.com/dawnzzz/simple-redis/lib/utils"
+	"github.com/dawnzzz/simple-redis/redis/client"
+	"github.com/dawnzzz/simple-redis/redis/protocol/reply"
 	"strconv"
 )
 

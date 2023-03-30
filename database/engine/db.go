@@ -1,12 +1,12 @@
 package engine
 
 import (
-	"Dawndis/datastruct/dict"
-	"Dawndis/datastruct/lock"
-	"Dawndis/interface/database"
-	"Dawndis/interface/redis"
-	"Dawndis/lib/utils"
-	"Dawndis/redis/protocol/reply"
+	"github.com/dawnzzz/simple-redis/datastruct/dict"
+	"github.com/dawnzzz/simple-redis/datastruct/lock"
+	"github.com/dawnzzz/simple-redis/interface/database"
+	"github.com/dawnzzz/simple-redis/interface/redis"
+	"github.com/dawnzzz/simple-redis/lib/utils"
+	"github.com/dawnzzz/simple-redis/redis/protocol/reply"
 	"strings"
 	"time"
 )

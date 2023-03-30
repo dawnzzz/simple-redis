@@ -1,13 +1,13 @@
 package cluster
 
 import (
-	"Dawndis/database/engine"
-	"Dawndis/datastruct/dict"
-	"Dawndis/interface/cluster"
-	"Dawndis/interface/redis"
-	"Dawndis/lib/consistenthash"
-	"Dawndis/redis/protocol/reply"
 	"github.com/bwmarrin/snowflake"
+	"github.com/dawnzzz/simple-redis/database/engine"
+	"github.com/dawnzzz/simple-redis/datastruct/dict"
+	"github.com/dawnzzz/simple-redis/interface/cluster"
+	"github.com/dawnzzz/simple-redis/interface/redis"
+	"github.com/dawnzzz/simple-redis/lib/consistenthash"
+	"github.com/dawnzzz/simple-redis/redis/protocol/reply"
 	"hash/crc32"
 )
 

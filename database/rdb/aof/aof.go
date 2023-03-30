@@ -1,14 +1,14 @@
 package aof
 
 import (
-	"Dawndis/interface/database"
-	"Dawndis/lib/utils"
-	"Dawndis/logger"
-	"Dawndis/redis/connection"
-	"Dawndis/redis/parser"
-	"Dawndis/redis/protocol/reply"
 	"context"
 	"errors"
+	"github.com/dawnzzz/simple-redis/interface/database"
+	"github.com/dawnzzz/simple-redis/lib/utils"
+	"github.com/dawnzzz/simple-redis/logger"
+	"github.com/dawnzzz/simple-redis/redis/connection"
+	"github.com/dawnzzz/simple-redis/redis/parser"
+	"github.com/dawnzzz/simple-redis/redis/protocol/reply"
 	"io"
 	"os"
 	"strconv"

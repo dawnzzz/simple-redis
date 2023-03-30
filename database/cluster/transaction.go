@@ -1,11 +1,11 @@
 package cluster
 
 import (
-	"Dawndis/database/cluster/tcc"
-	"Dawndis/database/engine"
-	"Dawndis/interface/redis"
-	"Dawndis/lib/utils"
-	"Dawndis/redis/protocol/reply"
+	"github.com/dawnzzz/simple-redis/database/cluster/tcc"
+	"github.com/dawnzzz/simple-redis/database/engine"
+	"github.com/dawnzzz/simple-redis/interface/redis"
+	"github.com/dawnzzz/simple-redis/lib/utils"
+	"github.com/dawnzzz/simple-redis/redis/protocol/reply"
 	"strings"
 )
 

@@ -1,12 +1,12 @@
 package tcc
 
 import (
-	"Dawndis/config"
-	"Dawndis/database/engine"
-	"Dawndis/interface/redis"
-	"Dawndis/lib/timewheel"
-	"Dawndis/logger"
-	"Dawndis/redis/protocol/reply"
+	"github.com/dawnzzz/simple-redis/config"
+	"github.com/dawnzzz/simple-redis/database/engine"
+	"github.com/dawnzzz/simple-redis/interface/redis"
+	"github.com/dawnzzz/simple-redis/lib/timewheel"
+	"github.com/dawnzzz/simple-redis/logger"
+	"github.com/dawnzzz/simple-redis/redis/protocol/reply"
 	"strconv"
 	"sync"
 	"time"

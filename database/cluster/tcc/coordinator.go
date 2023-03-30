@@ -1,11 +1,11 @@
 package tcc
 
 import (
-	"Dawndis/config"
-	"Dawndis/interface/cluster"
-	"Dawndis/interface/redis"
-	"Dawndis/lib/utils"
-	"Dawndis/redis/protocol/reply"
+	"github.com/dawnzzz/simple-redis/config"
+	"github.com/dawnzzz/simple-redis/interface/cluster"
+	"github.com/dawnzzz/simple-redis/interface/redis"
+	"github.com/dawnzzz/simple-redis/lib/utils"
+	"github.com/dawnzzz/simple-redis/redis/protocol/reply"
 	"strconv"
 )
 

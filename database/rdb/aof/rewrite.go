@@ -1,11 +1,11 @@
 package aof
 
 import (
-	"Dawndis/config"
-	"Dawndis/interface/database"
-	"Dawndis/lib/utils"
-	"Dawndis/logger"
-	"Dawndis/redis/protocol/reply"
+	"github.com/dawnzzz/simple-redis/config"
+	"github.com/dawnzzz/simple-redis/interface/database"
+	"github.com/dawnzzz/simple-redis/lib/utils"
+	"github.com/dawnzzz/simple-redis/logger"
+	"github.com/dawnzzz/simple-redis/redis/protocol/reply"
 	"io"
 	"io/ioutil"
 	"os"

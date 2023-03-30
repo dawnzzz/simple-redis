@@ -1,6 +1,6 @@
 package connection
 
-import "Dawndis/interface/redis"
+import "github.com/dawnzzz/simple-redis/interface/redis"
 
 // GetMultiStatus 获取是否在multi中
 func (c *Connection) GetMultiStatus() bool {

@@ -1,11 +1,11 @@
 package commands
 
 import (
-	"Dawndis/database/engine"
-	Set "Dawndis/datastruct/set"
-	"Dawndis/interface/database"
-	"Dawndis/interface/redis"
-	"Dawndis/redis/protocol/reply"
+	"github.com/dawnzzz/simple-redis/database/engine"
+	Set "github.com/dawnzzz/simple-redis/datastruct/set"
+	"github.com/dawnzzz/simple-redis/interface/database"
+	"github.com/dawnzzz/simple-redis/interface/redis"
+	"github.com/dawnzzz/simple-redis/redis/protocol/reply"
 	"strconv"
 )
 

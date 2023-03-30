@@ -1,11 +1,11 @@
 package main
 
 import (
-	"Dawndis/config"
-	"Dawndis/logger"
-	"Dawndis/redis/server"
-	"Dawndis/tcp"
 	"flag"
+	"github.com/dawnzzz/simple-redis/config"
+	"github.com/dawnzzz/simple-redis/logger"
+	"github.com/dawnzzz/simple-redis/redis/server"
+	"github.com/dawnzzz/simple-redis/tcp"
 )
 
 // 配置文件

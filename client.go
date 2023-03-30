@@ -1,9 +1,9 @@
 package main
 
 import (
-	"Dawndis/redis/client"
 	"flag"
 	"fmt"
+	"github.com/dawnzzz/simple-redis/redis/client"
 	"github.com/sirupsen/logrus"
 )
 

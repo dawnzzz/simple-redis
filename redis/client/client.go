@@ -1,14 +1,14 @@
 package client
 
 import (
-	"Dawndis/interface/redis"
-	"Dawndis/lib/sync/wait"
-	"Dawndis/logger"
-	"Dawndis/redis/parser"
-	"Dawndis/redis/protocol/reply"
 	"bufio"
 	"errors"
 	"fmt"
+	"github.com/dawnzzz/simple-redis/interface/redis"
+	"github.com/dawnzzz/simple-redis/lib/sync/wait"
+	"github.com/dawnzzz/simple-redis/logger"
+	"github.com/dawnzzz/simple-redis/redis/parser"
+	"github.com/dawnzzz/simple-redis/redis/protocol/reply"
 	"net"
 	"os"
 	"runtime/debug"

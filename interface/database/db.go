@@ -1,7 +1,7 @@
 package database
 
 import (
-	"Dawndis/interface/redis"
+	"github.com/dawnzzz/simple-redis/interface/redis"
 	"time"
 )
 

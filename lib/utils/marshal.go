@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"Dawndis/interface/database"
-	"Dawndis/redis/protocol/reply"
+	"github.com/dawnzzz/simple-redis/interface/database"
+	"github.com/dawnzzz/simple-redis/redis/protocol/reply"
 	"strconv"
 	"time"
 )

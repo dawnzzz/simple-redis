@@ -1,6 +1,6 @@
 package cluster
 
-import "Dawndis/interface/redis"
+import "github.com/dawnzzz/simple-redis/interface/redis"
 
 type PeerPicker interface {
 	PickNode(key string) (string, bool)

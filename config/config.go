@@ -1,7 +1,7 @@
 package config
 
 import (
-	"Dawndis/logger"
+	"github.com/dawnzzz/simple-redis/logger"
 	"github.com/spf13/viper"
 	"os"
 )

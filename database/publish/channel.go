@@ -1,9 +1,9 @@
 package publish
 
 import (
-	"Dawndis/interface/redis"
-	"Dawndis/lib/sync/wait"
-	"Dawndis/redis/protocol/reply"
+	"github.com/dawnzzz/simple-redis/interface/redis"
+	"github.com/dawnzzz/simple-redis/lib/sync/wait"
+	"github.com/dawnzzz/simple-redis/redis/protocol/reply"
 	"strconv"
 	"sync"
 	"time"

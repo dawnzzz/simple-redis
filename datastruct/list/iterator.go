@@ -148,7 +148,7 @@ func (iter *iterator) remove() interface{} {
 		}
 	} else {
 		// page 上不剩元素了，删除这个page
-		if iter.node != iter.ql.data.Back() {
+		if iter.node == iter.ql.data.Back() {
 			// 最后一页，也就是说删除的是最后一个元素
 			iter.ql.data.Remove(iter.node)
 			iter.node = nil

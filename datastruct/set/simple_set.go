@@ -1,6 +1,6 @@
 package set
 
-import "Dawndis/datastruct/dict"
+import "github.com/dawnzzz/simple-redis/datastruct/dict"
 
 type SimpleSet struct {
 	dict dict.Dict

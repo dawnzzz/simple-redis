@@ -1,15 +1,15 @@
 package server
 
 import (
-	"Dawndis/config"
-	database2 "Dawndis/database"
-	"Dawndis/interface/database"
-	"Dawndis/lib/sync/atomic"
-	"Dawndis/logger"
-	"Dawndis/redis/connection"
-	"Dawndis/redis/parser"
-	"Dawndis/redis/protocol/reply"
 	"context"
+	"github.com/dawnzzz/simple-redis/config"
+	database2 "github.com/dawnzzz/simple-redis/database"
+	"github.com/dawnzzz/simple-redis/interface/database"
+	"github.com/dawnzzz/simple-redis/lib/sync/atomic"
+	"github.com/dawnzzz/simple-redis/logger"
+	"github.com/dawnzzz/simple-redis/redis/connection"
+	"github.com/dawnzzz/simple-redis/redis/parser"
+	"github.com/dawnzzz/simple-redis/redis/protocol/reply"
 	"io"
 	"net"
 	"strings"

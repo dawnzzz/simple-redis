@@ -1,7 +1,7 @@
 package publish
 
 import (
-	"Dawndis/interface/redis"
+	"github.com/dawnzzz/simple-redis/interface/redis"
 	"sync"
 )
 

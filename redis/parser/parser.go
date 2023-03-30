@@ -1,12 +1,12 @@
 package parser
 
 import (
-	"Dawndis/interface/redis"
-	"Dawndis/logger"
-	"Dawndis/redis/protocol/reply"
 	"bufio"
 	"bytes"
 	"errors"
+	"github.com/dawnzzz/simple-redis/interface/redis"
+	"github.com/dawnzzz/simple-redis/logger"
+	"github.com/dawnzzz/simple-redis/redis/protocol/reply"
 	"io"
 	"strconv"
 )

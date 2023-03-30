@@ -1,8 +1,8 @@
 package database
 
 import (
-	"Dawndis/interface/redis"
-	"Dawndis/redis/protocol/reply"
+	"github.com/dawnzzz/simple-redis/interface/redis"
+	"github.com/dawnzzz/simple-redis/redis/protocol/reply"
 )
 
 // StartMultiStandalone 客户端开启 Multi 事务

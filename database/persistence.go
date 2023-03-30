@@ -1,10 +1,10 @@
 package database
 
 import (
-	"Dawndis/config"
-	"Dawndis/database/engine"
-	"Dawndis/database/rdb/aof"
-	"Dawndis/interface/database"
+	"github.com/dawnzzz/simple-redis/config"
+	"github.com/dawnzzz/simple-redis/database/engine"
+	"github.com/dawnzzz/simple-redis/database/rdb/aof"
+	"github.com/dawnzzz/simple-redis/interface/database"
 	"sync/atomic"
 )
 

@@ -1,9 +1,9 @@
 package engine
 
 import (
-	"Dawndis/datastruct/dict"
-	"Dawndis/lib/timewheel"
-	"Dawndis/logger"
+	"github.com/dawnzzz/simple-redis/datastruct/dict"
+	"github.com/dawnzzz/simple-redis/lib/timewheel"
+	"github.com/dawnzzz/simple-redis/logger"
 	"time"
 )
 

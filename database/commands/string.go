@@ -1,10 +1,10 @@
 package commands
 
 import (
-	"Dawndis/database/engine"
-	"Dawndis/interface/database"
-	"Dawndis/interface/redis"
-	"Dawndis/redis/protocol/reply"
+	"github.com/dawnzzz/simple-redis/database/engine"
+	"github.com/dawnzzz/simple-redis/interface/database"
+	"github.com/dawnzzz/simple-redis/interface/redis"
+	"github.com/dawnzzz/simple-redis/redis/protocol/reply"
 	"strconv"
 	"time"
 )

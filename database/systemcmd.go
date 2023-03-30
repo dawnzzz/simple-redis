@@ -1,9 +1,9 @@
 package database
 
 import (
-	"Dawndis/config"
-	"Dawndis/interface/redis"
-	"Dawndis/redis/protocol/reply"
+	"github.com/dawnzzz/simple-redis/config"
+	"github.com/dawnzzz/simple-redis/interface/redis"
+	"github.com/dawnzzz/simple-redis/redis/protocol/reply"
 	"strconv"
 )
 
