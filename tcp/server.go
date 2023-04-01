@@ -1,11 +1,11 @@
 package tcp
 
 import (
-	"Dawndis/config"
-	"Dawndis/interface/tcp"
-	"Dawndis/logger"
 	"context"
 	"fmt"
+	"github.com/dawnzzz/simple-redis/config"
+	"github.com/dawnzzz/simple-redis/interface/tcp"
+	"github.com/dawnzzz/simple-redis/logger"
 	"net"
 	"os"
 	"os/signal"
