@@ -189,17 +189,17 @@ redis-cli -h '127.0.0.1' -p 6179
 
 [1-TCP服务器](docs/1-TCP服务器.md)
 
-[2-客户端](2-客户端.md)
+[2-客户端](docs/2-客户端.md)
 
-[3-协议解析器](3-协议解析器.md)
+[3-协议解析器](docs/3-协议解析器.md)
 
-[4-数据结构之Hash表和LockMap](4-数据结构之Hash表和LockMap.md)
+[4-数据结构之Hash表和LockMap](docs/4-数据结构之Hash表和LockMap.md)
 
-[5-数据结构之List和SortedSet](5-数据结构之List和SortedSet.md)
+[5-数据结构之List和SortedSet](docs/5-数据结构之List和SortedSet.md)
 
-[6-simple-redis服务器](6-simple-redis服务器.md)
+[6-simple-redis服务器](docs/6-simple-redis服务器.md)
 
-[7-底层数据库](7-底层数据库.md)
+[7-底层数据库](docs/7-底层数据库.md)
 
 ## TODO
 
