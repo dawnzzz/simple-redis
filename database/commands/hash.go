@@ -10,16 +10,24 @@ import (
 )
 
 func execHSet(db *engine.DB, args [][]byte) (redis.Reply, *engine.AofExpireCtx) {
+	if len(args)%2 != 1 {
+		return reply.MakeArgNumErrReply("hset"), nil
+	}
+
 	key := string(args[0])
-	field := string(args[1])
-	value := args[2]
 
 	dict, _, errReply := getOrInitDict(db, key)
 	if errReply != nil {
 		return errReply, nil
 	}
 
-	result := dict.Put(field, value)
+	result := 0
+	for i := 1; i < len(args); i += 2 {
+		field := string(args[i])
+		value := args[i+1]
+		result += dict.Put(field, value)
+	}
+
 	return reply.MakeIntReply(int64(result)), &engine.AofExpireCtx{
 		NeedAof:  true,
 		ExpireAt: nil,
@@ -240,7 +248,7 @@ func getOrInitDict(db *engine.DB, key string) (dict Dict.Dict, inited bool, errR
 }
 
 func init() {
-	engine.RegisterCommand("HSet", execHSet, writeFirstKey, 4, engine.FlagWrite)
+	engine.RegisterCommand("HSet", execHSet, writeFirstKey, -4, engine.FlagWrite)
 	engine.RegisterCommand("HSetNX", execHSetNX, writeFirstKey, 4, engine.FlagWrite)
 	engine.RegisterCommand("HGet", execHGet, readFirstKey, 3, engine.FlagReadOnly)
 	engine.RegisterCommand("HExists", execHExists, readFirstKey, 3, engine.FlagReadOnly)
