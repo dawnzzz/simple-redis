@@ -53,7 +53,7 @@ type payload struct {
 }
 
 func NewPersister(db database.DBEngine, filename string, load bool, fsync int, tmpDBMaker func() database.DBEngine) (*Persister, error) {
-	if fsync < FsyncAlways || fsync >= FsyncNo {
+	if fsync < FsyncAlways || fsync > FsyncNo {
 		return nil, errors.New("load aof failed, aof fsync must be: 0: always, 1: every sec, 2: no")
 	}
 	persister := &Persister{}
