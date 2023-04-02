@@ -201,6 +201,8 @@ redis-cli -h '127.0.0.1' -p 6179
 
 [7-底层数据库](docs/7-底层数据库.md)
 
+[8-AOF持久化](docs/8-AOF持久化.md)
+
 ## TODO
 
 - [x] string 实现
