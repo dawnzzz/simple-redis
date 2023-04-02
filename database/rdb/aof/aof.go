@@ -102,6 +102,7 @@ func (persister *Persister) fsyncEverySecond() {
 				}
 				persister.pausingAof.Unlock()
 			case <-persister.ctx.Done():
+				ticker.Stop()
 				return
 			}
 		}
