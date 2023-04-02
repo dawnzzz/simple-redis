@@ -74,19 +74,7 @@ simple-redis -f config.yaml
 
 ### 客户端
 
-可以使用本项目编写的客户端，编译命令为：
-
-``` bash
-go build client.go -o client
-```
-
-编译完成之后使用 `-h` 参数指定服务器的 IP 地址，`-p` 参数指定服务器开放的端口号：
-
-``` bash
-client -h '127.0.0.1' -p 6179
-```
-
-也可以使用 Redis 的客户端进行连接：
+使用 Redis 的客户端进行连接（在使用 Redis 客户端进行连接时，若服务器设置了 keepalive 检测，若超过 keepalive 不发送消息则会断开连接）：
 
 ``` bash
 redis-cli -h '127.0.0.1' -p 6179
